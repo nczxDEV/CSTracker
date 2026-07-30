@@ -1,0 +1,80 @@
+name: Release
+
+# Builds, code-signs (for the auto-updater), and publishes a new CS
+# Tracker release whenever a version tag (e.g. "v0.3.0") is pushed - see
+# BUILD.md "Auto-update setup" for the full one-time walkthrough this
+# workflow depends on (signing key pair + GitHub secrets + tauri.conf.json
+# "pubkey"/"endpoints").
+#
+# Uses the official `tauri-apps/tauri-action`, which:
+#   1. builds the backend sidecar + the Tauri app (via the steps below),
+#   2. signs the resulting installer(s) with TAURI_SIGNING_PRIVATE_KEY(_PASSWORD),
+#   3. creates a (draft) GitHub Release with the installer(s) attached,
+#   4. generates and attaches a "latest.json" manifest - this is the exact
+#      file `tauri.conf.json` -> `plugins.updater.endpoints` points at, so
+#      existing installs can discover this new version.
+#
+# IMPORTANT: this workflow does NOT run automatically on every push (only
+# on a "vX.Y.Z" tag) specifically so every release is a deliberate,
+# reviewed action - and the created GitHub Release is a DRAFT
+# (releaseDraft: true below) so you can review/edit the release notes
+# before publishing it live to end users.
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  release:
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows is the primary supported/tested target (see BUILD.md) -
+        # add "macos-latest" / "ubuntu-22.04" here once you've verified a
+        # full local build succeeds on those platforms too.
+        platform: [windows-latest]
+    runs-on: ${{ matrix.platform }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.5"
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install backend dependencies
+        working-directory: cs2-overlay-backend
+        run: npm install
+
+      - name: Build the backend sidecar
+        working-directory: cs2-overlay-backend
+        run: npm run build:sidecar
+
+      - name: Install frontend dependencies
+        working-directory: cs2-overlay-frontend
+        run: npm install
+
+      - name: Build, sign & publish the release
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # One-time setup required - see BUILD.md "Auto-update setup":
+          # generate a signing key pair with
+          # `npm run tauri signer generate -- -w ~/.tauri/cstracker.key`
+          # (run from cs2-overlay-frontend), then add the PRIVATE key
+          # (file contents) and its password as repo secrets with these
+          # exact names (Settings -> Secrets and variables -> Actions).
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+        with:
+          projectPath: cs2-overlay-frontend
+          tagName: ${{ github.ref_name }}
+          releaseName: "CS Tracker ${{ github.ref_name }}"
+          releaseBody: "See CHANGELOG / commit history for details."
+          releaseDraft: true
+          prerelease: false

@@ -1,0 +1,247 @@
+/* ---------------------------------------------------------------------- */
+/* Map Pool Radar card ("map performance") - Player Summary tab.           */
+/* Reuses the app's tactical-HUD palette/typography, same "hero banner +  */
+/* card" recipe as the ELO Forecast / Player Summary hero.                 */
+/* ---------------------------------------------------------------------- */
+
+#mp-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mp-empty-state {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+}
+
+/* ---------- Hero banner ---------- */
+.mp-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 20px 24px 16px;
+  background:
+    radial-gradient(120% 140% at 100% 0%, rgba(157, 123, 255, 0.16), transparent 55%),
+    radial-gradient(90% 120% at 0% 100%, rgba(76, 141, 255, 0.14), transparent 55%),
+    linear-gradient(160deg, #181d27, #0d1015 70%);
+  border: 1px solid rgba(157, 123, 255, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+}
+.mp-hero-grid-lines {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.5;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: linear-gradient(180deg, black, transparent 85%);
+}
+.mp-hero-top {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.mp-hero-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mp-hero-title .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--accent-purple);
+  box-shadow: 0 0 8px var(--accent-purple);
+}
+.mp-refresh-note { position: relative; font-size: 10px; color: var(--text-muted); }
+
+.mp-hero-sub {
+  position: relative;
+  margin-top: 10px;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  font-weight: 500;
+  max-width: 520px;
+  line-height: 1.5;
+}
+.mp-hero-sub b { color: var(--text-primary); }
+.mp-hero-sub .best { color: var(--accent-green); font-weight: 700; }
+.mp-hero-sub .worst { color: var(--accent-red); font-weight: 700; }
+
+/* ---------- Toggle pills (Winrate / Rating / KD) ---------- */
+.mp-toggle-row {
+  position: relative;
+  margin-top: 14px;
+  display: flex;
+  gap: 6px;
+}
+.mp-toggle {
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-muted);
+  background: rgba(255,255,255,0.02);
+  cursor: pointer;
+  font-family: inherit;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+}
+.mp-toggle:hover { color: var(--text-secondary); }
+.mp-toggle.active {
+  color: #d9c8ff;
+  background: var(--accent-purple-dim);
+  border-color: rgba(157, 123, 255, 0.35);
+}
+
+/* ---------- Radar card ---------- */
+.mp-card {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 16px 18px 14px;
+}
+.mp-card h2 {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.mp-legend {
+  display: flex;
+  gap: 14px;
+  font-size: 10px;
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.mp-legend span { display: flex; align-items: center; gap: 5px; }
+.mp-legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
+
+.mp-radar-wrap { display: flex; justify-content: center; margin-top: 4px; }
+.mp-radar-wrap svg { display: block; max-width: 420px; width: 100%; height: auto; overflow: visible; }
+.mp-tick-label { font-family: var(--font-mono); font-size: 8px; fill: var(--text-muted); }
+
+/* Small map icon used as the radar axis label (replaces plain text map
+   names, per the approved mockup + user request) - an <image> element
+   inside the SVG, sized/clipped into a small circle. */
+.mp-axis-icon-bg { fill: #0d1015; opacity: 0.5; }
+.mp-axis-fallback-text {
+  font-family: var(--font-display);
+  font-size: 9px;
+  font-weight: 800;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  dominant-baseline: central;
+}
+
+/* ---------- Map stat rows ---------- */
+.mp-rows {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.mp-row {
+  display: grid;
+  grid-template-columns: 40px 1fr 46px 54px;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 10px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.015);
+}
+.mp-row-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  object-fit: contain;
+  background: rgba(255, 255, 255, 0.03);
+  flex-shrink: 0;
+}
+.mp-row-icon-fallback {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: var(--accent-purple-dim);
+  color: #d9c8ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 11px;
+  flex-shrink: 0;
+}
+.mp-row .name-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.mp-row .name {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.mp-row .played {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.mp-bar-track {
+  height: 6px;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.mp-bar-fill { height: 100%; border-radius: 4px; transition: width 0.3s ease; }
+.mp-row .wr {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 12px;
+  text-align: right;
+}
+.mp-row .rating {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+.wr.good { color: var(--accent-green); }
+.wr.mid { color: var(--accent-orange); }
+.wr.bad { color: var(--accent-red); }
+
+.mp-note {
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.5;
+}
+.mp-note b { color: var(--text-secondary); }

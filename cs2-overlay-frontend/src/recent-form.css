@@ -1,0 +1,54 @@
+/* ---------------------------------------------------------------------- */
+/* "Recent Form" card - Player Summary tab. GSI-FREE: unlike "My Match     */
+/* History" (which needs a live GSI connection and only ever covers the   */
+/* local player), this works for ANY player purely from the official      */
+/* FACEIT Data API's match history endpoint (see PlayerProfile.recentForm */
+/* in the backend). Reuses the .recent-badge/.ps-card visual language     */
+/* already established by player-summary.css.                             */
+/* ---------------------------------------------------------------------- */
+
+#rf-root .ps-card {
+  /* inherited from player-summary.css - no override needed, just scoping
+     this comment so the relationship is documented. */
+}
+
+.rf-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 14px;
+}
+.rf-badges .recent-badge {
+  width: 22px;
+  height: 22px;
+  font-size: 10.5px;
+  border-radius: 5px;
+}
+
+.rf-stats-row {
+  display: flex;
+  gap: 10px;
+}
+.rf-stat {
+  flex: 1;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 6px;
+}
+.rf-stat .val {
+  display: block;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 15px;
+  color: var(--text-primary);
+}
+.rf-stat .val.up { color: var(--accent-green); }
+.rf-stat .val.down { color: var(--accent-red); }
+.rf-stat .lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}

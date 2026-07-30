@@ -1,0 +1,628 @@
+:root {
+  /* ---- CS Tracker "tactical HUD" design system ----
+     Palette/typography aligned with the approved design-preview concept
+     (Rajdhani display font for headings/titles, Inter for body text,
+     JetBrains Mono for scoreboard-style numeric stats). Old variable
+     NAMES are kept unchanged so every existing rule below and in
+     launcher.css keeps working - only the underlying values moved to
+     the new palette. */
+  --bg-void: #090b10;
+  --bg-app: rgba(9, 11, 16, 0.92);
+  --bg-panel: #12161d;
+  --bg-panel-alt: #171c24;
+  --bg-row-hover: #1c222c;
+  --border-subtle: rgba(255, 255, 255, 0.07);
+  --line: rgba(255, 255, 255, 0.07);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --text-primary: #f2f4f7;
+  --text-secondary: #9aa4b2;
+  --text-muted: #5b6675;
+
+  /* CT blue (rank/ELO/primary accent) */
+  --accent-blue: #4c8dff;
+  --accent-blue-dim: rgba(76, 141, 255, 0.16);
+  /* T gold (level / secondary accent - replaces the old flat orange) */
+  --accent-orange: #f2a93b;
+  --accent-orange-dim: rgba(242, 169, 59, 0.16);
+  /* Radar green (live/online/win-rate) */
+  --accent-green: #39e58a;
+  --accent-green-dim: rgba(57, 229, 138, 0.16);
+  /* Alert red (danger/bans/losses) */
+  --accent-red: #ff4d5e;
+  --accent-red-dim: rgba(255, 77, 94, 0.16);
+  /* Violet (extra data series, e.g. Leetify/utility) */
+  --accent-purple: #9d7bff;
+  --accent-purple-dim: rgba(157, 123, 255, 0.16);
+
+  --radius: 10px;
+  --font-display: "Rajdhani", "Segoe UI", sans-serif;
+  --font-body: "Inter", "Segoe UI", -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "Consolas", monospace;
+  font-family: var(--font-body);
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: transparent;
+  color: var(--text-primary);
+  font-size: 13px;
+  user-select: none;
+}
+
+/* ---------- Shared "tactical HUD" bracket-card corner treatment ----------
+   Applied via a single ::before pseudo-element using 8 stacked
+   background-image layers (one per 2px-thick corner-bracket stroke), so
+   no extra wrapper markup is needed on any of the many card-like
+   elements below. Corners glow blue by default; hover intensifies. */
+.launcher-section,
+.team-compare-bar,
+.win-probability,
+.saved-player-item,
+.tracked-player-item {
+  position: relative;
+}
+.launcher-section::before,
+.team-compare-bar::before,
+.win-probability::before,
+.saved-player-item::before,
+.tracked-player-item::before {
+  content: "";
+  position: absolute;
+  inset: 5px;
+  pointer-events: none;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+  background-repeat: no-repeat;
+  background-image:
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue)),
+    linear-gradient(var(--accent-blue), var(--accent-blue));
+  background-size: 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px, 14px 2px, 2px 14px;
+  background-position: top left, top left, top right, top right, bottom left, bottom left, bottom right, bottom right;
+}
+.launcher-section:hover::before,
+.team-compare-bar:hover::before,
+.win-probability:hover::before,
+.saved-player-item:hover::before,
+.tracked-player-item:hover::before {
+  opacity: 1;
+}
+
+/* Matrix rain / custom background canvas - sits behind #app, fixed and
+   filling the entire window. Hidden by default, only shown in "matrix"
+   backgroundMode (see settings-store.js applyBackground()). */
+#matrix-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  z-index: 0;
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-app);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: background 0.25s ease;
+}
+
+/* ---------- Header (with radar-sweep scanline, matches design concept) ---------- */
+.header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 18px;
+  background: var(--bg-panel);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-app-region: drag;
+  overflow: hidden;
+}
+.header::before {
+  content: "";
+  position: absolute; left: -40%; top: 0; width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(76, 141, 255, 0.16), transparent);
+  animation: header-scan 3.6s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes header-scan {
+  0% { left: -40%; }
+  55% { left: 110%; }
+  100% { left: 110%; }
+}
+.header-left { display: flex; align-items: center; gap: 10px; position: relative; }
+.header-logo {
+  width: 22px; height: 22px; object-fit: contain; flex-shrink: 0;
+  filter: drop-shadow(0 0 4px rgba(76, 141, 255, 0.5));
+}
+.header-left h1 {
+  font-family: var(--font-display); font-size: 16px; font-weight: 700; margin: 0;
+  letter-spacing: 1.5px;
+  background: linear-gradient(90deg, #fff, #c9d6ee 60%, #7fa7f5);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.header-sub {
+  font-size: 8.5px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--text-muted); margin-top: 1px;
+}
+.header-center {
+  position: relative;
+  display: flex; align-items: center; gap: 8px;
+  color: var(--text-secondary); font-size: 12px;
+}
+.hotkey-badge {
+  background: #232a35; border: 1px solid var(--border-subtle);
+  padding: 2px 8px; border-radius: 5px; font-weight: 600; color: var(--text-primary);
+  font-size: 11px;
+}
+.header-right {
+  position: relative;
+  display: flex; align-items: center; gap: 10px;
+  font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-transform: uppercase;
+  -webkit-app-region: no-drag;
+}
+.header-right #mode-label.mode-live { color: var(--accent-green); }
+.compact-toggle-btn {
+  background: transparent; border: 1px solid var(--line-strong); color: var(--text-secondary);
+  padding: 4px 10px; border-radius: 6px; font-size: 10.5px; cursor: pointer;
+  text-transform: none; letter-spacing: normal;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease, color 0.15s ease;
+}
+.compact-toggle-btn:active { transform: scale(0.96); }
+.compact-toggle-btn.active { background: var(--accent-blue-dim); color: #8fb4ff; border-color: var(--accent-blue); }
+
+/* ---------- GSI live connection banner ---------- */
+.gsi-banner {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 6px 14px; background: var(--accent-green-dim);
+  border-bottom: 1px solid rgba(57, 229, 138, 0.35);
+  font-size: 11px; color: #6be097; -webkit-app-region: no-drag;
+}
+.gsi-banner button {
+  background: var(--accent-green); color: #06210f; border: none;
+  padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+}
+
+/* ---------- Roster input bar ---------- */
+.roster-bar {
+  display: flex; gap: 8px; align-items: center;
+  padding: 8px 14px; background: var(--bg-panel-alt);
+  border-bottom: 1px solid var(--border-subtle);
+  -webkit-app-region: no-drag;
+}
+.roster-bar input[type="text"] {
+  flex: 1; background: #0f1319; border: 1px solid var(--border-subtle);
+  color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 12px;
+}
+.roster-bar button {
+  background: linear-gradient(135deg, var(--accent-blue), #3f7de0); color: white; border: none;
+  padding: 6px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; font-weight: 600;
+  box-shadow: 0 3px 10px rgba(76, 141, 255, 0.25);
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+.roster-bar button:active { transform: scale(0.96); }
+.roster-bar button.secondary {
+  background: transparent; border: 1px solid var(--line-strong); color: var(--text-secondary);
+  box-shadow: none;
+}
+.roster-hint { font-size: 11px; color: var(--text-muted); padding: 0 14px 8px; }
+
+/* ---------- Roster chips (one-at-a-time "Add" queue before Look Up) ---------- */
+.roster-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 0 14px 8px; -webkit-app-region: no-drag;
+}
+.roster-chip {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--accent-blue-dim); border: 1px solid var(--accent-blue);
+  color: #8fb4ff; border-radius: 999px; padding: 4px 6px 4px 12px;
+  font-size: 11.5px; font-weight: 600;
+}
+.roster-chip-remove {
+  display: flex; align-items: center; justify-content: center;
+  width: 16px; height: 16px; border-radius: 50%; background: rgba(255,255,255,0.08);
+  color: #c7d8ff; border: none; cursor: pointer; font-size: 11px; line-height: 1; padding: 0;
+}
+.roster-chip-remove:hover { background: var(--accent-red); color: #fff; }
+
+/* ---------- Scrollable body ---------- */
+.body { flex: 1; overflow-y: auto; }
+
+/* ---------- Team block ---------- */
+.team-block { display: flex; border-bottom: 1px solid var(--border-subtle); }
+.team-accent {
+  width: 46px; min-width: 46px; display: flex; align-items: flex-start; justify-content: center;
+  padding-top: 14px; font-size: 26px; font-weight: 800; color: rgba(255,255,255,0.85);
+}
+.team-block.team-a .team-accent { background: linear-gradient(180deg, rgba(76,141,255,0.35), rgba(76,141,255,0.05)); font-family: var(--font-display); }
+.team-block.team-b .team-accent { background: linear-gradient(180deg, rgba(242,169,59,0.35), rgba(242,169,59,0.05)); font-family: var(--font-display); }
+
+.team-table { flex: 1; }
+.row.header-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 0.55fr 0.6fr 0.75fr 0.65fr 0.55fr 0.65fr 0.65fr 24px;
+  gap: 4px; padding: 6px 12px; font-size: 10.5px; letter-spacing: 1px;
+  color: var(--text-muted); text-transform: uppercase; font-weight: 700;
+  font-family: var(--font-display);
+}
+.row.player-row {
+  display: grid;
+  grid-template-columns: 1.6fr 0.7fr 0.55fr 0.6fr 0.75fr 0.65fr 0.55fr 0.65fr 0.65fr 24px;
+  gap: 4px; align-items: center; padding: 7px 12px; cursor: pointer;
+  border-top: 1px solid var(--border-subtle);
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+.row.player-row:hover { background: var(--bg-row-hover); box-shadow: inset 3px 0 0 var(--accent-blue); }
+.row.player-row.expanded { background: var(--bg-row-hover); box-shadow: inset 3px 0 0 var(--accent-blue); }
+
+.cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cell.player-cell { display: flex; align-items: center; gap: 8px; }
+/* Scoreboard-style monospace numbers for every stat cell (K/D, ADR, HS%,
+   Win Rate, CS Rating, Leetify, ELO...) - keeps the player-name cell in
+   the regular body font. */
+.row.player-row .cell:not(.player-cell):not(.chevron) {
+  font-family: var(--font-mono); font-weight: 600; font-size: 12px;
+}
+.avatar {
+  width: 24px; height: 24px; border-radius: 5px; background: #2a313d;
+  background-size: cover; background-position: center; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700;
+  color: var(--text-secondary);
+  border: 1px solid rgba(255,255,255,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+}
+.player-name {
+  font-weight: 600; font-size: 12.5px; cursor: pointer;
+  transition: color 0.15s ease;
+  border-bottom: 1px dashed transparent;
+}
+.player-name:hover { color: #8fb4ff; border-bottom-color: rgba(143,180,255,0.5); }
+.player-name.saving { opacity: 0.5; cursor: wait; }
+.player-name.saved-flash { color: var(--accent-green); border-bottom-color: var(--accent-green); }
+.player-name.save-failed-flash { color: var(--accent-red); border-bottom-color: var(--accent-red); }
+.online-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); flex-shrink: 0; }
+.flag-icon { font-size: 13px; line-height: 1; flex-shrink: 0; cursor: help; }
+.membership-badge {
+  color: #fbbf24; font-size: 11px; flex-shrink: 0; cursor: help;
+  filter: drop-shadow(0 0 3px rgba(251, 191, 36, 0.6));
+}
+
+/* ---------- Safety indicator (public Steam VAC/game ban status) ---------- */
+.safety-badge {
+  width: 16px; height: 16px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 800; cursor: help;
+}
+.safety-badge.safety-ok { background: var(--accent-green-dim); color: var(--accent-green); }
+.safety-badge.safety-danger { background: var(--accent-red-dim); color: var(--accent-red); }
+.safety-badge.safety-unknown { background: #232a35; color: var(--text-muted); }
+.safety-detail { font-size: 11px; }
+.safety-row { display: flex; justify-content: space-between; padding: 3px 0; border-top: 1px solid var(--border-subtle); }
+.safety-row .label { color: var(--text-muted); }
+.safety-row .value { font-weight: 700; }
+
+.rank-badge {
+  display: flex; align-items: center; gap: 5px; font-size: 11.5px; font-weight: 700;
+  font-family: var(--font-mono);
+}
+/* Official-style FACEIT level badge icons (assets/faceit-levels/) - replaces the previous color-coded circle. */
+.rank-icon-img {
+  width: 22px; height: 22px; flex-shrink: 0; object-fit: contain;
+  filter: drop-shadow(0 1px 2px rgba(0,0,0,0.4));
+}
+
+.stat-kd-good { color: var(--accent-green); }
+.stat-kd-bad { color: var(--accent-red); }
+.na { color: var(--text-muted); font-style: italic; }
+
+.chevron {
+  width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;
+  color: var(--text-muted); transition: transform 0.15s ease;
+}
+.row.player-row.expanded .chevron { transform: rotate(90deg); color: var(--text-primary); }
+
+/* ---------- Compact / pill view ---------- */
+.team-block.compact {
+  display: flex; flex-direction: column; padding: 10px 12px; gap: 8px;
+}
+.team-block.compact .team-accent {
+  width: auto; padding: 0; font-size: 14px; align-self: flex-start;
+  background: none !important;
+}
+.compact-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.compact-pill {
+  display: flex; align-items: center; gap: 6px; background: #171c24;
+  border: 1px solid var(--border-subtle); border-radius: 999px; padding: 4px 10px;
+  font-size: 11px; cursor: help;
+}
+.compact-pill-name { font-weight: 600; }
+.compact-pill-kd { font-weight: 700; }
+.compact-summary {
+  display: flex; flex-wrap: wrap; gap: 12px; font-size: 11px; color: var(--text-secondary);
+}
+.compact-summary b { color: var(--text-primary); }
+.compact-summary .link-strongest { color: var(--accent-green); }
+.compact-summary .link-weakest { color: var(--accent-red); }
+
+/* ---------- Averages strip ---------- */
+.avg-strip { display: flex; gap: 6px; padding: 8px 12px; background: var(--bg-panel-alt); }
+.avg-box {
+  flex: 1; text-align: center; padding: 6px 4px; border-radius: 6px; font-size: 11px;
+  transition: transform 0.15s ease;
+}
+.avg-box:hover { transform: translateY(-1px); }
+.avg-box.blue { background: linear-gradient(135deg, rgba(76,141,255,.22), rgba(76,141,255,.06)); color: #8fb4ff; }
+.avg-box.orange { background: linear-gradient(135deg, rgba(242,169,59,.24), rgba(242,169,59,.06)); color: #f5c078; }
+.avg-box .value { font-size: 14px; font-weight: 800; display: block; font-family: var(--font-mono); }
+
+/* ---------- Detail panel (expand) ---------- */
+.detail-panel {
+  grid-column: 1 / -1;
+  background: #0e1116;
+  border-top: 1px dashed var(--border-subtle);
+  padding: 12px 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 16px;
+  animation: detail-panel-in 0.18s ease;
+}
+@keyframes detail-panel-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.detail-section h4 {
+  margin: 0 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px;
+  color: var(--text-muted); font-weight: 700; font-family: var(--font-display);
+}
+
+/* ---------- Performance (K/R, total HS, win streaks) ---------- */
+.performance-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 8px;
+}
+.perf-stat {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle); border-radius: 8px;
+  padding: 8px 6px; text-align: center;
+}
+.perf-value { display: block; font-size: 15px; font-weight: 800; color: var(--text-primary); font-family: var(--font-mono); }
+.perf-value.streak-value { color: var(--accent-orange); }
+.perf-label { font-size: 9px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* ---------- Team-vs-team comparison bar ---------- */
+.team-compare-bar {
+  margin: 10px 12px; padding: 10px 14px; background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle); border-radius: 10px;
+  animation: detail-panel-in 0.2s ease;
+}
+.compare-header {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin-bottom: 8px;
+}
+.compare-team-tag {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.6px; padding: 2px 10px; border-radius: 999px;
+}
+.team-a-tag { background: var(--accent-blue-dim); color: #8fb4ff; }
+.team-b-tag { background: var(--accent-orange-dim); color: #f3b46a; }
+.compare-vs { font-size: 10px; color: var(--text-muted); font-weight: 700; }
+.compare-row {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center;
+  gap: 8px; padding: 3px 0; font-size: 12.5px;
+}
+.compare-value { font-weight: 700; color: var(--text-secondary); font-family: var(--font-mono); }
+.compare-value.compare-a { text-align: right; }
+.compare-value.compare-b { text-align: left; }
+.compare-value.compare-lead { color: var(--accent-green); }
+.compare-label { font-size: 9.5px; color: var(--text-muted); text-align: center; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* ---------- "Team Strength" win-probability estimate ---------- */
+.win-probability {
+  margin: 0 12px 10px; padding: 10px 14px; background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle); border-radius: 10px;
+  animation: detail-panel-in 0.2s ease;
+}
+.win-prob-header { text-align: center; margin-bottom: 8px; }
+.win-prob-title {
+  font-size: 10px; font-weight: 800; letter-spacing: 0.6px; text-transform: uppercase;
+  color: var(--text-muted); font-family: var(--font-display);
+}
+.win-prob-bar {
+  display: flex; height: 22px; border-radius: 999px; overflow: hidden;
+  border: 1px solid var(--border-subtle);
+}
+.win-prob-fill {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 11px; font-weight: 800; color: #fff; transition: width 0.3s ease;
+  min-width: 34px; font-family: var(--font-mono);
+}
+.win-prob-fill span { text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+.win-prob-a { background: linear-gradient(90deg, rgba(76,141,255,0.55), rgba(76,141,255,0.9)); }
+.win-prob-b { background: linear-gradient(90deg, rgba(242,169,59,0.9), rgba(242,169,59,0.55)); }
+.win-prob-disclaimer {
+  margin-top: 6px; font-size: 9.5px; color: var(--text-muted); text-align: center;
+  font-style: italic;
+}
+
+/* map stats table */
+.map-stats-table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+.map-stats-table th {
+  text-align: left; color: var(--text-muted); font-weight: 600; padding: 3px 6px; font-size: 10px;
+  text-transform: uppercase;
+}
+.map-stats-table td { padding: 3px 6px; border-top: 1px solid var(--border-subtle); }
+
+/* leetify bars */
+.leetify-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+.leetify-bar-label { width: 74px; color: var(--text-secondary); flex-shrink: 0; }
+.leetify-bar-track { flex: 1; height: 6px; background: #232a35; border-radius: 4px; overflow: hidden; }
+.leetify-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple)); }
+.leetify-bar-value { width: 34px; text-align: right; font-weight: 700; color: var(--text-primary); font-family: var(--font-mono); }
+.leetify-unavailable {
+  font-size: 11px; color: var(--text-muted); background: #171c24; padding: 8px; border-radius: 6px;
+  border: 1px dashed var(--border-subtle);
+}
+/* Signed delta-style Leetify metrics (rating/opening) - shown as a plain
+   value, deliberately NOT bar-charted alongside the 0-100 dimensions
+   (aim/positioning/utility) above, since they're on a totally different
+   scale - see tracker-render.js/player-summary.js doc comments. */
+.leetify-plain-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; font-size: 11px; }
+.leetify-plain-row .leetify-bar-label { width: auto; }
+/* Mandatory "Data Provided by Leetify" attribution (Leetify Developer
+   Guidelines) - shown wherever Leetify data is displayed, visually
+   separated from the rest of the card via its own top border/spacing,
+   using the OFFICIAL, unmodified badge image. Never resized/recolored. */
+.leetify-attribution-link { display: block; margin-top: 10px; padding-top: 8px; border-top: 1px solid var(--border-subtle); line-height: 0; }
+.leetify-attribution-link img { height: 22px; display: block; }
+
+/* commendations */
+.commend-badges { display: flex; gap: 8px; margin-bottom: 12px; }
+.commend-badge {
+  flex: 1; text-align: center; padding: 8px 4px; border-radius: 8px;
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+}
+.commend-badge .count { display: block; font-size: 16px; font-weight: 800; font-family: var(--font-mono); }
+.commend-badge .label { font-size: 9.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+.commend-badge.friendly .count { color: var(--accent-green); }
+.commend-badge.leader .count { color: #8fb4ff; }
+.commend-badge.skilled .count { color: var(--accent-purple); }
+
+.save-hint {
+  font-size: 10.5px; color: var(--text-muted); line-height: 1.5;
+  background: #171c24; border: 1px dashed var(--border-subtle);
+  border-radius: 6px; padding: 8px;
+}
+.save-hint b { color: var(--text-secondary); }
+
+/* note (the "note-box"/"note-status" classes are also reused by the
+   Control Panel - launcher.html - for the saved-player note field) */
+.note-box textarea {
+  width: 100%; min-height: 70px; background: #0f1319; border: 1px solid var(--border-subtle);
+  color: var(--text-primary); border-radius: 6px; padding: 8px; font-size: 12px; resize: vertical;
+  font-family: inherit;
+}
+.note-status { font-size: 10px; color: var(--text-muted); margin-top: 4px; height: 12px; }
+.note-status.saved { color: var(--accent-green); }
+
+/* CS rating / manual override */
+.cs-rating-manual {
+  font-size: 11px; color: var(--text-muted); margin-top: 6px;
+}
+.cs-rating-manual input {
+  width: 70px; background: #0f1319; border: 1px solid var(--border-subtle); color: var(--text-primary);
+  border-radius: 5px; padding: 3px 6px; font-size: 11px; margin-left: 6px;
+}
+
+/* ---------- Footer ---------- */
+.footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 8px 14px; background: var(--bg-panel); border-top: 1px solid var(--border-subtle);
+  font-size: 10.5px; color: var(--text-muted);
+}
+
+.empty-state {
+  padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 12.5px;
+}
+.empty-state b { color: var(--text-secondary); }
+
+/* ---------- "DEMO DATA" banner (sample profiles, not a real lookup) ---------- */
+.demo-data-banner {
+  display: flex; align-items: center; gap: 8px; justify-content: center;
+  padding: 7px 14px; background: rgba(139, 92, 246, 0.14);
+  border-bottom: 1px solid rgba(139, 92, 246, 0.35);
+  font-size: 11px; color: #c4b5fd;
+}
+.demo-data-badge {
+  background: var(--accent-purple); color: #fff; font-weight: 800;
+  font-size: 9.5px; letter-spacing: 0.6px; padding: 2px 8px; border-radius: 999px;
+  flex-shrink: 0;
+}
+
+/* ---------- Reusable "hero profile" avatar with pulsing live ring ----------
+   Used by the Saved Players cards (launcher.css) and anywhere a single
+   larger player portrait is shown, matching the approved design-preview
+   concept ("pulsing live ring in radar green"). */
+.avatar-wrap { position: relative; flex-shrink: 0; }
+.avatar-ring {
+  position: absolute; inset: -4px; border-radius: 50%;
+  border: 1.5px solid var(--accent-green); opacity: 0;
+  animation: avatar-ping 2.4s ease-out infinite;
+  pointer-events: none;
+}
+@keyframes avatar-ping {
+  0% { opacity: 0.7; transform: scale(0.9); }
+  80% { opacity: 0; transform: scale(1.25); }
+  100% { opacity: 0; }
+}
+.live-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--accent-green);
+  display: inline-block; box-shadow: 0 0 6px var(--accent-green); flex-shrink: 0;
+}
+
+/* ---------- Lookup error state (a REAL search failed - distinct from empty-state/demo) ---------- */
+.lookup-error-state {
+  margin: 16px; padding: 16px; border-radius: 10px;
+  background: rgba(239, 68, 68, 0.08); border: 1px solid rgba(239, 68, 68, 0.3);
+}
+.lookup-error-title {
+  font-size: 13px; font-weight: 800; color: var(--accent-red); margin-bottom: 6px;
+}
+.lookup-error-detail {
+  font-size: 12px; color: var(--text-primary); margin-bottom: 8px; word-break: break-word;
+}
+.lookup-error-hint {
+  font-size: 11px; color: var(--text-muted); line-height: 1.5;
+}
+
+/* ---------- Loading state (roster lookup in progress) ---------- */
+.lookup-loading-state {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 14px; padding: 60px 20px;
+}
+.lookup-spinner {
+  width: 34px; height: 34px; border-radius: 50%;
+  border: 3px solid rgba(76, 141, 255, 0.2); border-top-color: var(--accent-blue);
+  animation: lookup-spin 0.8s linear infinite;
+}
+@keyframes lookup-spin { to { transform: rotate(360deg); } }
+.lookup-loading-text { font-size: 12px; color: var(--text-secondary); }
+
+/* ---------- App-startup loading overlay ---------- */
+#startup-loading-overlay {
+  position: fixed; inset: 0; z-index: 999;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; background: var(--bg-void);
+  transition: opacity 0.25s ease;
+}
+#startup-loading-overlay.hidden {
+  opacity: 0; pointer-events: none;
+}
+#startup-loading-overlay .lookup-spinner {
+  width: 40px; height: 40px; border-width: 4px;
+}
+#startup-loading-overlay .startup-loading-text {
+  font-size: 12.5px; color: var(--text-secondary); letter-spacing: 0.4px; font-family: var(--font-display);
+}
+#startup-loading-overlay img {
+  width: 48px; height: 48px; object-fit: contain;
+  filter: drop-shadow(0 0 10px rgba(76, 141, 255, 0.5));
+}
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-thumb { background: #2a313d; border-radius: 4px; }

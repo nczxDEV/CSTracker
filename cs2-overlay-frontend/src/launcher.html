@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CS Tracker - Control Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap"
+    rel="stylesheet"
+  />
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="launcher.css" />
+  <link rel="stylesheet" href="player-summary.css" />
+  <link rel="stylesheet" href="elo-forecast.css" />
+  <link rel="stylesheet" href="map-pool-radar.css" />
+  <link rel="stylesheet" href="recent-form.css" />
+  <link rel="stylesheet" href="faceit-match-history.css" />
+  <link rel="stylesheet" href="account.css" />
+  <link rel="stylesheet" href="time-performance.css" />
+  <link rel="stylesheet" href="dodge-or-play.css" />
+  <link rel="stylesheet" href="theme-glass.css" />
+  <link rel="stylesheet" href="onboarding.css" />
+</head>
+<body class="launcher-body">
+  <div id="startup-loading-overlay">
+    <img src="assets/logo.png" alt="CS Tracker" />
+    <div class="lookup-spinner"></div>
+    <div class="startup-loading-text">Starting CS Tracker...</div>
+  </div>
+
+  <!-- First-launch onboarding wizard - visible by default (see onboarding.css)
+       so it sits on top of the startup-loading overlay above until
+       onboarding.js's checkAndShow() decides whether it's actually needed
+       (both FACEIT + Steam API keys already configured -> hidden
+       immediately; otherwise stays up and blocks the rest of the app
+       until the user finishes it). See onboarding.js. -->
+  <div id="onboarding-overlay" class="onb-overlay">
+    <div class="onb-wizard">
+      <div class="onb-top">
+        <div class="onb-brand">CS <span>TRACKER</span> SETUP &middot; First Launch</div>
+        <div class="onb-progress">
+          <div class="onb-progress-seg active" data-onb-seg="0"><i></i></div>
+          <div class="onb-progress-seg" data-onb-seg="1"><i></i></div>
+          <div class="onb-progress-seg" data-onb-seg="2"><i></i></div>
+          <div class="onb-progress-seg" data-onb-seg="3"><i></i></div>
+        </div>
+      </div>
+
+      <!-- STEP 0: Welcome -->
+      <div class="onb-step active" data-onb-step="0">
+        <div class="onb-badge-diamond"></div>
+        <h1>Welcome! Let's set up your overlay</h1>
+        <p class="onb-lead">
+          This takes about a minute: enter your FACEIT and Steam Web API
+          keys, and optionally connect CS2's official live match data
+          (Game State Integration). Both API keys are required before you
+          can start using CS Tracker.
+        </p>
+        <div class="onb-actions">
+          <span></span>
+          <div class="onb-right">
+            <button type="button" class="onb-btn onb-btn-primary" data-onb-goto="1">Get Started &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 1: API keys (required) -->
+      <div class="onb-step" data-onb-step="1">
+        <h1>FACEIT &amp; Steam API keys</h1>
+        <p class="onb-lead">
+          These power your rank/ELO/level, K/D, win rate, and Steam
+          ban-safety data. Both keys are required to continue - CS
+          Tracker stores them locally (backend SQLite database) and only
+          ever sends them to the official FACEIT/Steam APIs.
+        </p>
+
+        <label>FACEIT API Key</label>
+        <div class="onb-field">
+          <input type="password" id="onb-faceit-api-key" placeholder="xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" />
+        </div>
+        <p class="onb-hint">
+          Don't have one yet? Get a free Server-side API key at
+          <a href="https://developers.faceit.com" target="_blank" rel="noopener">developers.faceit.com</a>.
+        </p>
+
+        <label>Steam Web API Key</label>
+        <div class="onb-field">
+          <input type="password" id="onb-steam-api-key" placeholder="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx" />
+        </div>
+        <p class="onb-hint">
+          Get one for free at
+          <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a>.
+        </p>
+
+        <button type="button" class="onb-btn onb-btn-test" id="onb-save-keys-btn">Save &amp; Test Keys</button>
+        <div class="onb-status-line" id="onb-keys-status"></div>
+
+        <div class="onb-actions" style="margin-top:18px;">
+          <button type="button" class="onb-btn onb-btn-ghost" data-onb-goto="0">&larr; Back</button>
+          <div class="onb-right">
+            <button type="button" class="onb-btn onb-btn-primary" id="onb-continue-step1-btn" data-onb-goto="2" disabled>Continue &rarr;</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- STEP 2: GSI (optional) -->
+      <div class="onb-step" data-onb-step="2">
+        <h1>CS2 live match connection</h1>
+        <p class="onb-lead">
+          Optional: lets CS Tracker automatically detect who's in your
+          match and their live K/D/A - no FACEIT key needed for this
+          part. You can always set this up later from the
+          <b>Setup &amp; GSI</b> tab.
+        </p>
+
+        <button type="button" class="onb-btn onb-btn-test" id="onb-gsi-download-btn">Download GSI Config File</button>
+        <div class="onb-status-line" id="onb-gsi-status"></div>
+        <p class="onb-hint">
+          After downloading, copy the file into your CS2
+          <code>game/csgo/cfg/</code> folder and restart CS2. The file
+          already contains your unique security token - no manual editing
+          needed.
+        </p>
+
+        <div class="onb-actions" style="margin-top:18px;">
+          <button type="button" class="onb-btn onb-btn-ghost" data-onb-goto="1">&larr; Back</button>
+          <div class="onb-right">
+            <button type="button" class="onb-btn onb-btn-primary" data-onb-goto="3">Continue &rarr;</button>
+          </div>
+        </div>
+        <div class="onb-skip-link" data-onb-goto="3">Skip GSI setup for now (you can do this later)</div>
+      </div>
+
+      <!-- STEP 3: Done -->
+      <div class="onb-step" data-onb-step="3">
+        <h1>All set!</h1>
+        <p class="onb-lead">
+          Start a CS2 match, or enter a roster manually from the
+          Overview tab.
+        </p>
+
+        <ul class="onb-checklist">
+          <li><span class="onb-check-ico">&#10003;</span> FACEIT API key saved</li>
+          <li><span class="onb-check-ico">&#10003;</span> Steam API key saved</li>
+          <li><span class="onb-check-ico" id="onb-checklist-gsi-ico">&#8211;</span> CS2 GSI config <span id="onb-checklist-gsi-label">skipped (optional)</span></li>
+        </ul>
+
+        <div class="onb-actions">
+          <button type="button" class="onb-btn onb-btn-ghost" data-onb-goto="2">&larr; Back</button>
+          <div class="onb-right">
+            <button type="button" class="onb-btn onb-btn-primary" id="onb-finish-btn">Start Using CS Tracker</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <canvas id="matrix-canvas"></canvas>
+  <div id="launcher">
+    <header class="launcher-header">
+      <img src="assets/logo.png" alt="CS Tracker" class="launcher-logo" />
+      <p class="launcher-hdr-title">CS TRACKER</p>
+      <p class="launcher-hdr-sub">Control Panel</p>
+      <!-- "Bejelentkezés FACEIT-tel / Steammel" (AuthModule) - clicking
+           this avatar switches the main content area to the "Account"
+           tab (see account.js) - deliberately NOT one of the permanent
+           nav-tab buttons below (Overview/Appearance/...), only ever
+           reachable via this button, same idea as clicking your own
+           profile picture in Discord/Steam. -->
+      <button type="button" class="account-avatar-btn" id="account-avatar-btn" title="Account">
+        <span id="account-avatar-initials">?</span>
+        <span class="account-avatar-status-dot" id="account-avatar-status-dot"></span>
+      </button>
+    </header>
+
+    <nav class="launcher-nav" id="launcher-nav">
+      <button class="nav-tab active" data-tab-target="tab-overview">
+        <span class="nav-icon">&#9678;</span><span class="nav-label">Overview</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-appearance">
+        <span class="nav-icon">&#9635;</span><span class="nav-label">Appearance</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-setup">
+        <span class="nav-icon">&#9881;</span><span class="nav-label">Setup &amp; GSI</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-saved">
+        <span class="nav-icon">&#9733;</span><span class="nav-label">Saved Players</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-player-summary">
+        <span class="nav-icon">&#9670;</span><span class="nav-label">Player Summary</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-time-performance">
+        <span class="nav-icon">&#9202;</span><span class="nav-label">Time Performance</span>
+      </button>
+      <button class="nav-tab" data-tab-target="tab-dodge-or-play">
+        <img class="nav-icon nav-icon-img" src="assets/icons/dodge-or-play.png" alt="" />
+        <span class="nav-label">Dodge or Play</span>
+      </button>
+    </nav>
+
+    <div class="launcher-content">
+    <div class="launcher-tab-panel active" id="tab-overview" data-tab="tab-overview">
+
+    <section class="launcher-section" id="current-match-section">
+      <h2>Current Match <span class="badge-optional">GSI</span></h2>
+      <div class="control-row">
+        <span class="status-dot" id="live-match-status-dot" title="Not connected"></span>
+        <span id="live-match-status-label">Waiting for match...</span>
+      </div>
+      <div id="inline-gsi-banner" class="gsi-banner" style="display:none;">
+        <span>Live match data detected (GSI connected).</span>
+        <button id="inline-gsi-load-roster-btn">Reload Roster</button>
+      </div>
+      <p class="hint">
+        Automatically detects your live CS2 match via Game State
+        Integration (GSI) and loads the full roster into the tracker
+        below - no manual typing, no button click needed. Use
+        <b>Reload Roster</b> above only if you want to manually refresh
+        it (e.g. right after a late player joins). Requires a live GSI
+        connection - see the <b>Setup &amp; GSI</b> tab to download the
+        config file.
+      </p>
+    </section>
+
+    <section class="launcher-section" id="matchroom-section">
+      <h2>
+        FACEIT Matchroom <span class="badge-optional">Auto-load</span>
+        <a href="#" id="dodge-or-play-link" class="dodge-or-play-badge" style="display:none;">
+          <img src="assets/icons/dodge-or-play.png" alt="" />
+          Dodge or Play &rarr;
+        </a>
+      </h2>
+      <div class="control-row">
+        <input
+          id="matchroom-input"
+          type="text"
+          placeholder="https://www.faceit.com/en/cs2/room/1-..."
+        />
+        <button id="matchroom-load-btn" class="primary-btn" style="flex:0 0 auto;">Load from Matchroom</button>
+      </div>
+      <div class="note-status" id="matchroom-status"></div>
+      <p class="hint">
+        Paste a FACEIT matchroom link (or just the match ID) to
+        automatically pull in both teams' full rosters - no manual typing
+        needed, and works whether or not you're actually in the match
+        yourself. Sourced from the official FACEIT Data API - only public
+        match lineup data, no scraping.
+      </p>
+    </section>
+
+    <section class="launcher-section" id="manual-mode-section">
+      <h2>Manual Mode <span class="badge-optional">No GSI needed</span></h2>
+      <div class="control-row">
+        <input
+          id="inline-roster-input"
+          type="text"
+          placeholder="One Steam ID / FACEIT nickname, then click Add"
+        />
+        <button id="inline-add-roster-entry-btn" class="secondary-btn" style="flex:0 0 auto;">Add</button>
+      </div>
+      <div id="inline-roster-chips" class="roster-chips"></div>
+      <div class="control-row">
+        <button id="inline-resolve-btn" class="primary-btn">Look Up</button>
+        <button id="inline-clear-btn" class="secondary-btn">Clear</button>
+        <button id="inline-compact-toggle-btn" class="secondary-btn">Compact View</button>
+      </div>
+      <p class="hint">
+        Type one name/ID, click <b>Add</b> (or press Enter) to queue it, repeat
+        for up to 10 players, then click <b>Look Up</b>. The first 5 →
+        <b>TEAM A</b>, the next 5 → <b>TEAM B</b>. Click a player's name to
+        save them to the list below. By default a plain name is matched
+        against FACEIT first, then Steam - prefix it with <code>steam:</code>
+        or <code>faceit:</code> (e.g. <code>faceit:xadez</code>) to force a
+        specific platform.
+      </p>
+      <div id="inline-tracker-body-root" class="inline-tracker-body">
+        <div class="empty-state">Enter up to 10 players above, then click <b>Look Up</b> - or load your live match above, if GSI is connected.</div>
+      </div>
+    </section>
+
+    <section class="launcher-section" id="tray-behavior-section">
+      <h2>Window &amp; Tray Behavior <span class="badge-optional">New</span></h2>
+      <p class="hint">
+        CS Tracker shows an icon in your system tray while running.
+        Left-click it (or use its right-click menu) to bring the Control
+        Panel back at any time, even after closing this window.
+      </p>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="quit-on-close-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Fully quit (close everything) when I close this window</span>
+      </div>
+      <p class="hint">
+        <b>Off (default):</b> closing this window just minimizes it to
+        the tray - the backend and any live GSI connection keep running
+        in the background.<br />
+        <b>On:</b> closing this window fully exits CS Tracker (backend
+        included), same as "Quit CS Tracker Completely" below.
+      </p>
+      <div class="control-row">
+        <button id="quit-completely-btn" class="secondary-btn danger-btn">Quit CS Tracker Completely</button>
+      </div>
+    </section>
+
+    <section class="launcher-section" id="software-update-section">
+      <h2>Software Update <span class="badge-optional">New</span></h2>
+      <p class="hint">
+        CS Tracker checks a public GitHub Releases feed for newer
+        versions - no personal data is sent with the check. Updates are
+        cryptographically signed; an update is only ever installed after
+        its signature is verified.
+      </p>
+      <div class="control-row">
+        <label>Current version</label>
+        <span id="update-current-version" class="hint-inline">-</span>
+      </div>
+      <div class="control-row">
+        <span class="status-dot" id="update-status-dot" title="Not checked yet"></span>
+        <span id="update-status-label">Not checked yet</span>
+      </div>
+      <div class="control-row">
+        <button id="check-update-btn" class="primary-btn">Check for Updates</button>
+        <button id="install-update-btn" class="secondary-btn" style="display:none;">Download &amp; Install Update</button>
+      </div>
+      <div class="note-status" id="update-progress-status"></div>
+      <p class="hint" id="update-notes-hint" style="display:none;"></p>
+    </section>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-setup" data-tab="tab-setup">
+
+    <section class="launcher-section" id="setup-wizard-section">
+      <h2>Setup Wizard <span class="badge-optional">API Keys</span></h2>
+      <p class="hint">
+        Enter your FACEIT and Steam Web API keys here - they're stored
+        locally on your machine (backend SQLite database) and are never
+        sent anywhere except the official FACEIT/Steam APIs. You never
+        need to edit a <code>.env</code> file or open a terminal.
+      </p>
+      <div class="control-row">
+        <label>FACEIT API Key</label>
+        <input id="faceit-api-key" type="password" placeholder="Leave blank to keep the current value" />
+        <span class="status-dot" id="faceit-status-dot" title="Not configured"></span>
+      </div>
+      <div class="control-row">
+        <label>Steam Web API Key</label>
+        <input id="steam-api-key" type="password" placeholder="Leave blank to keep the current value" />
+        <span class="status-dot" id="steam-status-dot" title="Not configured"></span>
+      </div>
+      <div class="control-row">
+        <label>Leetify API Key <span class="hint-inline">(optional)</span></label>
+        <input id="leetify-api-key" type="password" placeholder="Get one free at leetify.com/app/developer" />
+        <span class="status-dot" id="leetify-status-dot" title="Not configured"></span>
+      </div>
+      <p class="hint">
+        Powers "My Leetify Stats" (Account tab) once your Steam account
+        is linked - get a free key at
+        <a href="https://leetify.com/app/developer" target="_blank" rel="noopener">leetify.com/app/developer</a>.
+        Leave blank to skip - everything else in the app works without it.
+      </p>
+      <div class="control-row">
+        <button id="save-api-keys-btn" class="primary-btn">Save API Keys</button>
+      </div>
+      <div class="note-status" id="api-keys-save-status"></div>
+      <p class="hint">
+        Need keys? Get a FACEIT key at
+        <a href="https://developers.faceit.com" target="_blank" rel="noopener">developers.faceit.com</a>
+        and a Steam key at
+        <a href="https://steamcommunity.com/dev/apikey" target="_blank" rel="noopener">steamcommunity.com/dev/apikey</a>.
+      </p>
+    </section>
+
+    <section class="launcher-section" id="gsi-section">
+      <h2>Live Match Data (GSI) <span class="badge-optional">Optional</span></h2>
+      <p class="hint">
+        CS2's official Game State Integration (GSI) feature can send your
+        live match state to CS Tracker automatically - no more manually
+        typing in a 10-player roster. This only ever sends
+        name/team/kill-death-assist/score data - CS Tracker never
+        requests or processes other players' position or visibility data
+        (see the backend's GSI compliance notes).
+      </p>
+      <div class="control-row">
+        <span class="status-dot" id="gsi-status-dot" title="Not connected"></span>
+        <span id="gsi-status-label">Not connected</span>
+      </div>
+      <div class="control-row">
+        <button id="download-gsi-config-btn" class="primary-btn">Download GSI Config File</button>
+      </div>
+      <p class="hint">
+        After downloading, copy the file into your CS2
+        <code>game/csgo/cfg/</code> folder and restart CS2. The file
+        already contains your unique security token - no manual editing
+        needed.
+      </p>
+    </section>
+
+    <section class="launcher-section" id="discord-alerts-section">
+      <h2>Discord Alerts <span class="badge-optional">Optional</span></h2>
+      <p class="hint">
+        Sends messages to your own Discord channel via a webhook you
+        create yourself (Discord: Server Settings &rarr; Integrations
+        &rarr; Webhooks &rarr; New Webhook &rarr; Copy URL). The URL is
+        stored locally on your machine and never sent anywhere except
+        Discord's own webhook endpoint.
+      </p>
+      <div class="control-row">
+        <label>Webhook URL</label>
+        <input id="discord-webhook-url" type="password" placeholder="https://discord.com/api/webhooks/..." />
+        <span class="status-dot" id="discord-status-dot" title="Not configured"></span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="discord-enabled-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Enable Discord Alerts</span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="discord-vac-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Alert when a VAC/game-banned player is detected in your roster</span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="discord-match-end-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Alert with a summary when one of my matches finishes</span>
+      </div>
+
+      <p class="hint" style="margin-top:10px;">
+        Only alert during these match types
+        <span class="hint-inline">(best-effort - CS2's GSI reports the same generic modes regardless of platform; see below)</span>:
+      </p>
+      <div class="column-picker" id="discord-match-type-picker">
+        <label class="column-chip"><input type="checkbox" value="any" /> Any match</label>
+        <label class="column-chip"><input type="checkbox" value="premier" /> Premier / Competitive</label>
+        <label class="column-chip"><input type="checkbox" value="casual" /> Casual / Other</label>
+      </div>
+      <p class="hint">
+        "Premier / Competitive" is inferred from GSI's reported game mode
+        (CS2's GSI has no distinct signal for FACEIT/third-party matches -
+        they report the same generic modes as Valve matchmaking).
+        Currently detected: <b id="discord-current-match-type">Unknown</b>.
+      </p>
+
+      <div class="control-row">
+        <button id="save-discord-settings-btn" class="primary-btn">Save</button>
+        <button id="send-discord-test-btn" class="secondary-btn">Send Test Alert</button>
+      </div>
+      <div class="note-status" id="discord-save-status"></div>
+    </section>
+
+    <section class="launcher-section" id="player-tracking-section">
+      <h2>Player Tracking <span class="badge-optional">FACEIT &middot; Discord</span></h2>
+      <p class="hint">
+        Track any FACEIT player by nickname - not necessarily someone
+        you're playing with. CS Tracker checks their match history every
+        few minutes and sends a Discord alert (see Webhook URL above)
+        whenever their next match finishes, with their personal K/D and
+        stats for that match.
+      </p>
+      <p class="hint">
+        <b>FACEIT only</b> - Valve doesn't publish a public API for CS2
+        Premier/Casual match history for arbitrary players, so this can't
+        track a Steam-only/Premier player unless they happen to be in
+        your own live match (see "My Match History" on the Player
+        Summary tab for that case).
+      </p>
+      <div class="control-row">
+        <input id="tracked-player-input" type="text" placeholder="FACEIT nickname, e.g. xadez" />
+        <button id="add-tracked-player-btn" class="primary-btn" style="flex:0 0 auto;">Track Player</button>
+      </div>
+      <div class="note-status" id="tracked-player-add-status"></div>
+
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="tracked-player-loss-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Alert when a tracked player LOSES a match</span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="tracked-player-win-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Alert when a tracked player WINS a match</span>
+      </div>
+
+      <div id="tracked-players-list" class="tracked-players-list">
+        <div class="empty-state">No players tracked yet.</div>
+      </div>
+    </section>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-appearance" data-tab="tab-appearance">
+
+    <section class="launcher-section" id="ui-theme-section">
+      <h2>UI Theme <span class="badge-optional">New</span></h2>
+      <p class="hint">
+        Choose the Control Panel's overall look - independent of the
+        "App Background" setting below (which only controls the
+        background fill/effect behind the cards, not the cards
+        themselves). Applies live, no restart needed.
+      </p>
+      <div class="mp-toggle-row" id="ui-theme-toggle" style="margin-top:0;">
+        <button type="button" class="mp-toggle" data-ui-theme="hud">Tactical HUD</button>
+        <button type="button" class="mp-toggle" data-ui-theme="glass">Tactical Glass</button>
+      </div>
+    </section>
+
+    <section class="launcher-section">
+      <h2>App Background</h2>
+      <div class="control-row">
+        <label>Mode</label>
+        <select id="bg-mode">
+          <option value="default">Default (dark panel)</option>
+          <option value="solid">Solid color</option>
+          <option value="gradient">Gradient</option>
+          <option value="matrix">Matrix rain (digital rain)</option>
+          <option value="galaxy-live">Galaxy (animated - Milky Way)</option>
+          <option value="cyberpunk">Cyberpunk (animated neon skyline)</option>
+          <option value="teamspirit">Team Spirit (animated mono radar)</option>
+          <option value="custom">Custom image...</option>
+        </select>
+      </div>
+
+      <div class="control-row" id="solid-color-row">
+        <label>Color</label>
+        <input id="solid-color" type="color" value="#0a0d12" />
+      </div>
+
+      <div class="control-row" id="gradient-color-row" style="display:none;">
+        <label>Gradient</label>
+        <input id="gradient-from" type="color" value="#0a0d12" />
+        <input id="gradient-to" type="color" value="#12161d" />
+      </div>
+
+      <div class="control-row" id="matrix-color-row" style="display:none;">
+        <label>Matrix color</label>
+        <input id="matrix-color" type="color" value="#22c55e" />
+      </div>
+      <div class="control-row" id="matrix-speed-row" style="display:none;">
+        <label>Speed</label>
+        <input id="matrix-speed" type="range" min="0.2" max="3" step="0.1" value="1" />
+        <span id="matrix-speed-value" class="range-value">1.0x</span>
+      </div>
+      <div class="control-row" id="matrix-density-row" style="display:none;">
+        <label>Density</label>
+        <input id="matrix-density" type="range" min="0.2" max="2" step="0.1" value="1" />
+        <span id="matrix-density-value" class="range-value">1.0x</span>
+      </div>
+
+      <div class="control-row" id="galaxy-speed-row" style="display:none;">
+        <label>Drift speed</label>
+        <input id="galaxy-speed" type="range" min="0.2" max="3" step="0.1" value="1" />
+        <span id="galaxy-speed-value" class="range-value">1.0x</span>
+      </div>
+      <p class="hint" id="galaxy-live-hint" style="display:none;">
+        An animated Milky Way effect - parallax twinkling stars, drifting
+        nebula glow, and occasional shooting stars, as if the Control
+        Panel window were floating out in space.
+      </p>
+
+      <div class="control-row" id="cyberpunk-speed-row" style="display:none;">
+        <label>Speed</label>
+        <input id="cyberpunk-speed" type="range" min="0.2" max="3" step="0.1" value="1" />
+        <span id="cyberpunk-speed-value" class="range-value">1.0x</span>
+      </div>
+      <p class="hint" id="cyberpunk-hint" style="display:none;">
+        A retro-synthwave neon skyline - a pulsing striped sun on the
+        horizon, a blinking city silhouette, an animated perspective grid
+        floor, and drifting neon particles.
+      </p>
+
+      <div class="control-row" id="teamspirit-speed-row" style="display:none;">
+        <label>Speed</label>
+        <input id="teamspirit-speed" type="range" min="0.2" max="3" step="0.1" value="1" />
+        <span id="teamspirit-speed-value" class="range-value">1.0x</span>
+      </div>
+      <p class="hint" id="teamspirit-hint" style="display:none;">
+        A monochrome tactical radar HUD with the Team Spirit logo
+        centered inside a rotating radar sweep, over a slowly shifting
+        black/white duotone panel.
+      </p>
+
+      <div class="control-row" id="custom-image-row" style="display:none;">
+        <label>Upload Image</label>
+        <input id="custom-image-input" type="file" accept="image/png,image/jpeg,image/webp" />
+      </div>
+      <div class="control-row" id="custom-image-status-row" style="display:none;">
+        <label></label>
+        <span id="custom-image-status" class="hint-inline">No image uploaded yet.</span>
+        <button id="custom-image-clear-btn" class="secondary-btn" type="button">Remove</button>
+      </div>
+      <p class="hint" id="custom-image-hint" style="display:none;">
+        Applies to this Control Panel window. The image is downscaled
+        and stored locally on your machine (browser storage) - never
+        uploaded anywhere.
+      </p>
+
+      <div class="control-row">
+        <label>Panel opacity</label>
+        <input id="panel-opacity" type="range" min="0.3" max="1" step="0.02" value="0.92" />
+        <span id="panel-opacity-value" class="range-value">92%</span>
+      </div>
+
+      <div class="preview-wrap">
+        <canvas id="preview-canvas"></canvas>
+        <div id="preview-panel">Preview</div>
+      </div>
+
+      <div class="control-row">
+        <button id="apply-btn" class="primary-btn">Apply</button>
+        <button id="reset-btn" class="secondary-btn">Reset to Default</button>
+      </div>
+      <div class="note-status" id="save-status"></div>
+    </section>
+
+    <section class="launcher-section" id="display-section">
+      <h2>Stat Columns &amp; Display <span class="badge-optional">New</span></h2>
+      <p class="hint">
+        Choose which stat columns show on the tracker table - useful for
+        keeping the view uncluttered. Changes apply live, no restart
+        needed.
+      </p>
+      <div class="column-picker" id="column-picker">
+        <label class="column-chip"><input type="checkbox" value="rank" /> Rank / ELO</label>
+        <label class="column-chip"><input type="checkbox" value="level" /> Level</label>
+        <label class="column-chip"><input type="checkbox" value="matches" /> Matches</label>
+        <label class="column-chip"><input type="checkbox" value="kd" /> K/D</label>
+        <label class="column-chip"><input type="checkbox" value="kr" /> K/R Ratio</label>
+        <label class="column-chip"><input type="checkbox" value="wr" /> Win Rate</label>
+        <label class="column-chip"><input type="checkbox" value="csrating" /> CS Rating</label>
+        <label class="column-chip"><input type="checkbox" value="leetify" /> Leetify</label>
+        <label class="column-chip"><input type="checkbox" value="hs" /> HS%</label>
+      </div>
+      <div class="control-row">
+        <label>Default view</label>
+        <select id="default-view-select">
+          <option value="full">Full table on startup</option>
+          <option value="compact">Compact / pill view on startup</option>
+        </select>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="team-comparison-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Show Team A vs Team B comparison bar</span>
+      </div>
+      <div class="control-row">
+        <label class="toggle-switch">
+          <input type="checkbox" id="win-probability-toggle" />
+          <span class="toggle-slider"></span>
+        </label>
+        <span>Show "Team Strength" win estimate <span class="hint-inline">(rough heuristic, not a guarantee)</span></span>
+      </div>
+      <div class="note-status" id="display-save-status"></div>
+    </section>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-saved" data-tab="tab-saved">
+
+    <section class="launcher-section">
+      <h2>Saved Players</h2>
+      <p class="hint">
+        Click a player's <b>name</b> in the tracker (Overview tab) to add
+        them here - you can write notes, refresh their data, or remove
+        them from the list.
+      </p>
+      <div class="control-row saved-players-toolbar">
+        <input id="saved-players-search" type="text" placeholder="Search by name..." />
+        <select id="saved-players-sort-by">
+          <option value="savedAt">Sort: Recently saved</option>
+          <option value="name">Sort: Name</option>
+          <option value="elo">Sort: FACEIT ELO</option>
+          <option value="kd">Sort: K/D</option>
+        </select>
+        <button id="saved-players-sort-dir-btn" class="secondary-btn" title="Toggle ascending/descending">↓</button>
+      </div>
+      <div id="saved-players-list" class="saved-players-list">
+        <div class="empty-state">No saved players yet.</div>
+      </div>
+    </section>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-player-summary" data-tab="tab-player-summary">
+
+    <section class="launcher-section" id="ps-lookup-section">
+      <h2>Player Summary <span class="badge-optional">FACEIT</span></h2>
+      <p class="hint">
+        Enter your FACEIT nickname to pull a full stat summary card - rank,
+        lifetime stats, per-map breakdown, CS Rating, Leetify and more, all
+        sourced from the official FACEIT/Steam APIs (the same key
+        configured in the <b>Setup &amp; GSI</b> tab). This only ever reads
+        <b>public</b> profile data - nothing is written to your account.
+      </p>
+      <div class="control-row">
+        <input id="ps-nickname-input" type="text" placeholder="Your FACEIT nickname, e.g. xadez" />
+        <button id="ps-lookup-btn" class="primary-btn" style="flex:0 0 auto;">View Stats</button>
+      </div>
+      <div class="note-status" id="ps-status"></div>
+    </section>
+
+    <div id="ps-result-root">
+      <div class="empty-state ps-empty-state">Enter your FACEIT nickname above and click <b>View Stats</b> to see your summary.</div>
+    </div>
+
+    <div id="ef-root"></div>
+
+    <div id="mp-root"></div>
+
+    <div id="rf-root"></div>
+
+    <div id="fmh-root"></div>
+
+    <section class="launcher-section" id="match-history-section">
+      <h2>
+        My Match History <span class="badge-optional">GSI</span>
+        <span class="mp-toggle-row" id="match-history-view-toggle" style="margin-top:0;">
+          <button type="button" class="mp-toggle active" data-view="recent">Recent</button>
+          <button type="button" class="mp-toggle" data-view="sessions">By Session</button>
+        </span>
+      </h2>
+      <p class="hint">
+        Automatically recorded from CS2's Game State Integration each time
+        one of your matches finishes - shows your own K/D trend over
+        recent matches. Only ever uses YOUR OWN stats (never other
+        players' data). Requires a live GSI connection (see the
+        <b>Setup &amp; GSI</b> tab).
+      </p>
+
+      <div id="match-history-recent-view">
+        <div class="match-history-summary">
+          <div class="mh-stat"><span class="mh-value" id="mh-avg-kd">N/A</span><span class="mh-label">Avg K/D</span></div>
+          <div class="mh-stat"><span class="mh-value" id="mh-match-count">0</span><span class="mh-label">Matches</span></div>
+          <div class="mh-stat"><span class="mh-value" id="mh-win-trend">N/A</span><span class="mh-label">Trend</span></div>
+        </div>
+        <div class="sparkline-wrap">
+          <canvas id="match-history-sparkline"></canvas>
+          <div class="empty-state" id="match-history-empty">No matches recorded yet - play a match with GSI connected.</div>
+        </div>
+        <div id="match-history-list" class="match-history-list"></div>
+      </div>
+
+      <div id="match-history-sessions-view" style="display:none;">
+        <div id="session-report-root"></div>
+      </div>
+
+      <div class="control-row">
+        <button id="refresh-match-history-btn" class="secondary-btn">Refresh</button>
+        <button id="clear-match-history-btn" class="secondary-btn danger-btn">Clear History</button>
+      </div>
+    </section>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-time-performance" data-tab="tab-time-performance">
+
+    <section class="launcher-section" id="tp-lookup-section">
+      <h2>Time-Based Performance <span class="badge-optional">GSI-free</span></h2>
+      <p class="hint">
+        Enter a FACEIT nickname to see a breakdown of their win rate by
+        hour of day and day of week, built purely from their FACEIT match
+        history (up to the last 100 matches) - works for any player, no
+        GSI connection needed. Use it to spot which hours are actually
+        worth queuing ranked in.
+      </p>
+      <div class="control-row">
+        <input id="tp-nickname-input" type="text" placeholder="FACEIT nickname, e.g. xadez" />
+        <button id="tp-analyze-btn" class="primary-btn" style="flex:0 0 auto;">Analyze</button>
+      </div>
+      <div class="note-status" id="tp-status"></div>
+    </section>
+
+    <div id="tp-result-root"></div>
+
+    </div>
+    <div class="launcher-tab-panel" id="tab-dodge-or-play" data-tab="tab-dodge-or-play">
+
+    <section class="launcher-section" id="dodge-or-play-section">
+      <h2>Dodge or Play <span class="badge-optional">FACEIT Matchroom</span></h2>
+      <div class="control-row">
+        <input
+          id="dop-matchroom-input"
+          type="text"
+          placeholder="https://www.faceit.com/en/cs2/room/1-..."
+        />
+        <button id="dop-analyze-btn" class="primary-btn" style="flex:0 0 auto;">Run Analysis</button>
+      </div>
+      <div class="note-status" id="dop-status"></div>
+      <p class="hint">
+        Paste a FACEIT matchroom link (same one as the Overview tab) to
+        screen both squads for suspected smurf accounts and players
+        currently on tilt, and get a PLAY/DODGE recommendation with an
+        estimated win probability. Uses only public FACEIT stats already
+        visible on each player's profile - a probabilistic indicator,
+        not a fact-checked accusation.
+      </p>
+    </section>
+
+    <div id="dop-result-root"></div>
+
+    </div>
+
+    <!-- "Account" tab - NOT one of the permanent nav-tab buttons above,
+         only ever reachable via the header's avatar button (see
+         account.js). "Bejelentkezés FACEIT-tel / Steammel" - lets the
+         user link their own FACEIT/Steam account once, so the app
+         auto-recognizes them everywhere (Player Summary, My Match
+         History) instead of manual nickname entry every time. -->
+    <div class="launcher-tab-panel" id="tab-account" data-tab="tab-account">
+
+      <section class="launcher-section account-header-card" id="account-header-section">
+        <div class="account-header-avatar" id="account-header-avatar">?</div>
+        <div class="account-header-id">
+          <div class="account-header-name" id="account-header-name">Not signed in</div>
+          <div class="account-header-sub" id="account-header-sub">Link a FACEIT or Steam account below.</div>
+        </div>
+      </section>
+
+      <section class="launcher-section" id="linked-accounts-section">
+        <h2>Linked Accounts</h2>
+        <p class="hint">
+          Connect your FACEIT and/or Steam account once - CS Tracker then
+          automatically knows who you are everywhere in the app (Player
+          Summary, My Match History), instead of typing your own
+          nickname every time. Login happens in your system's default
+          browser (never inside this app's own window), the standard,
+          secure way desktop apps handle FACEIT/Steam sign-in.
+        </p>
+
+        <div class="linked-account-row" id="linked-account-row-faceit">
+          <div class="linked-account-icon faceit">FC</div>
+          <div class="linked-account-main">
+            <div class="linked-account-provider">FACEIT</div>
+            <div class="linked-account-name" id="linked-account-name-faceit">Not connected</div>
+          </div>
+          <button type="button" class="secondary-btn" id="faceit-login-btn">Login with FACEIT</button>
+          <button type="button" class="secondary-btn danger-btn" id="faceit-unlink-btn" style="display:none;">Unlink</button>
+        </div>
+
+        <div class="linked-account-row" id="linked-account-row-steam">
+          <div class="linked-account-icon steam">ST</div>
+          <div class="linked-account-main">
+            <div class="linked-account-provider">Steam</div>
+            <div class="linked-account-name" id="linked-account-name-steam">Not connected</div>
+          </div>
+          <button type="button" class="secondary-btn" id="steam-login-btn">Login with Steam</button>
+          <button type="button" class="secondary-btn danger-btn" id="steam-unlink-btn" style="display:none;">Unlink</button>
+        </div>
+
+        <div class="note-status" id="account-login-status"></div>
+      </section>
+
+      <section class="launcher-section" id="my-leetify-stats-section" style="display:none;">
+        <div class="section-title-row">
+          <h2 style="margin:0;">My Leetify Stats <span class="badge-optional">Personal</span></h2>
+        </div>
+        <p class="hint" style="margin-top:6px;">
+          Automatically loaded for your linked Steam account - your
+          overall aim/positioning/utility ratings and recent match
+          performance, no manual lookup needed.
+        </p>
+        <div id="my-leetify-stats-root">
+          <div class="empty-state">Link your Steam account above to see your Leetify stats.</div>
+        </div>
+      </section>
+
+    </div>
+    </div>
+
+    <footer class="launcher-footer">
+      Settings are applied live instantly, no restart needed.
+    </footer>
+  </div>
+
+  <div id="confirm-dialog-overlay" class="confirm-dialog-overlay" style="display:none;">
+    <div class="confirm-dialog">
+      <p id="confirm-dialog-message">Are you sure?</p>
+      <div class="confirm-dialog-actions">
+        <button id="confirm-dialog-cancel" class="secondary-btn">Cancel</button>
+        <button id="confirm-dialog-confirm" class="danger-btn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="matrix-bg.js"></script>
+  <script src="galaxy-bg.js"></script>
+  <script src="cyberpunk-bg.js"></script>
+  <script src="teamspirit-bg.js"></script>
+  <script src="settings-store.js"></script>
+  <script src="saved-players-client.js"></script>
+  <script src="tracker-render.js"></script>
+  <script src="elo-forecast.js"></script>
+  <script src="map-pool-radar.js"></script>
+  <script src="recent-form.js"></script>
+  <script src="faceit-match-history.js"></script>
+  <script src="time-performance.js"></script>
+  <script src="dodge-or-play.js"></script>
+  <script src="player-summary.js"></script>
+  <script src="onboarding.js"></script>
+  <script src="updater.js"></script>
+  <script src="account.js"></script>
+  <script src="launcher.js"></script>
+</body>
+</html>

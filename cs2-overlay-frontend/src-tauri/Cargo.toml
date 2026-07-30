@@ -1,0 +1,52 @@
+[package]
+name = "cs2-overlay-frontend"
+version = "0.2.0"
+description = "CS Tracker desktop client - Control Panel with an inline CS2 stats tracker"
+edition = "2021"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = ["tray-icon"] }
+# Used to start/stop the sidecar (bundled backend binary) - see
+# main.rs "spawn_backend_sidecar" and the README "Sidecar packaging" section.
+tauri-plugin-shell = "2"
+# Remembers window position/size across launches.
+tauri-plugin-window-state = "2"
+# Auto-updater - see README "Auto-update" section / BUILD.md "Auto-update
+# setup" for the one-time signing-key + GitHub Releases feed setup this
+# needs before `tauri.conf.json` -> `plugins.updater.active` can safely
+# be flipped to `true`.
+tauri-plugin-updater = "2"
+# Restarts the app after an update has been downloaded and installed
+# (see updater.js "Software Update" section - calls
+# `window.__TAURI__.process.relaunch()`) - the updater plugin only
+# downloads+installs the new version, it does NOT relaunch the process
+# itself.
+tauri-plugin-process = "2"
+# Native "Save As..." file dialog - used by the "Download GSI Config File"
+# button (see launcher.js `saveGsiConfigFile`). A plain `window.open()`/
+# browser-style download does NOT reliably trigger the OS file-save flow
+# inside a Tauri webview, so this is the correct, native replacement (the
+# actual file write happens in Rust via `std::fs::write`, no separate fs
+# plugin needed).
+tauri-plugin-dialog = "2"
+# Opens a URL in the user's SYSTEM DEFAULT BROWSER (see account.js
+# "Login with FACEIT/Steam" buttons) - required so the OAuth/OpenID
+# login page + password entry always happens in a real, trusted browser
+# the user already trusts with their credentials, never inside the
+# embedded Tauri webview itself (the standard, secure pattern for OAuth
+# in desktop apps).
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# NOTE: this project intentionally has NO [lib] section. The original
+# scaffold declared one (`cs2_overlay_frontend_lib`, staticlib/cdylib/rlib)
+# without a matching `src/lib.rs`, which made `cargo metadata`/`tauri
+# build` fail with "can't find library ... rename file to src/lib.rs".
+# Since this app is desktop-only (no mobile target, nothing else links
+# against this crate as a library), a plain binary crate built from
+# `src/main.rs` is all that's needed - removing [lib] fixes the build
+# without requiring an extra lib.rs file.

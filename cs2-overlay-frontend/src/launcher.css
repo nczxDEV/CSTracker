@@ -1,0 +1,882 @@
+.launcher-body {
+  background: var(--bg-void);
+  height: 100%;
+}
+
+#launcher {
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 100vh;
+  overflow-y: auto;
+  /* Full-size/maximizable window support: on very wide (maximized)
+     windows, cap the content width and center it so lines of text/rows
+     of controls don't stretch to an unreadable width - see the
+     column-layout media query below for how the wasted side space is
+     actually put to use instead (a real 2-column dashboard layout). */
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.launcher-header {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 14px 0 12px;
+  overflow: hidden;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+}
+.launcher-header::before {
+  content: "";
+  position: absolute; left: -40%; top: 0; width: 40%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(76, 141, 255, 0.18), transparent);
+  animation: header-scan 3.2s ease-in-out infinite;
+  pointer-events: none;
+}
+.launcher-logo {
+  max-width: 160px;
+  height: auto;
+  object-fit: contain;
+  filter: drop-shadow(0 0 8px rgba(76, 141, 255, 0.35));
+  position: relative;
+}
+.launcher-hdr-title {
+  position: relative;
+  font-family: var(--font-display); font-weight: 700; font-size: 20px;
+  letter-spacing: 2px; margin: 8px 0 0;
+  background: linear-gradient(90deg, #fff, #c9d6ee 60%, #7fa7f5);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.launcher-hdr-sub {
+  position: relative;
+  font-size: 9.5px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--text-muted); margin: 3px 0 0;
+}
+
+/* ---------- Tab navigation ---------- */
+.launcher-nav {
+  display: flex;
+  gap: 6px;
+  padding: 4px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.nav-tab {
+  position: relative;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 9px 10px 11px;
+  font-family: var(--font-display);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  cursor: pointer;
+  clip-path: polygon(8px 0, 100% 0, 100% 100%, 0 100%, 0 8px);
+  transition: background 0.18s ease, color 0.18s ease, transform 0.1s ease;
+}
+.nav-tab:hover { background: rgba(255, 255, 255, 0.04); color: var(--text-primary); }
+.nav-tab:active { transform: scale(0.97); }
+.nav-tab.active {
+  background: var(--accent-blue-dim);
+  color: #fff;
+}
+.nav-tab.active::after {
+  content: "";
+  position: absolute; left: 8px; right: 8px; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--accent-blue), #8fb4ff);
+  box-shadow: 0 0 8px rgba(76, 141, 255, 0.7);
+}
+.nav-icon { font-size: 13px; line-height: 1; }
+/* "Dodge or Play" nav tab uses an actual icon image instead of a unicode
+   glyph - sized to visually match the unicode nav-icons next to it. */
+.nav-icon-img { width: 13px; height: 13px; object-fit: contain; flex-shrink: 0; opacity: 0.85; }
+.nav-tab.active .nav-icon-img { opacity: 1; }
+
+/* ---------- "Dodge or Play" quick-access badge (FACEIT Matchroom section) ---------- */
+#matchroom-section h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+.dodge-or-play-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  text-transform: none;
+  color: #f5c078;
+  background: var(--accent-orange-dim);
+  border: 1px solid rgba(242, 169, 59, 0.35);
+  border-radius: 999px;
+  padding: 4px 12px 4px 6px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+.dodge-or-play-badge:hover { background: rgba(242, 169, 59, 0.26); }
+.dodge-or-play-badge:active { transform: scale(0.97); }
+.dodge-or-play-badge img { width: 16px; height: 16px; object-fit: contain; flex-shrink: 0; }
+.nav-label { white-space: nowrap; }
+
+.launcher-content { display: contents; }
+.launcher-tab-panel {
+  display: none;
+  flex-direction: column;
+  gap: 14px;
+}
+.launcher-tab-panel.active {
+  display: flex;
+  animation: tab-fade-in 0.18s ease;
+}
+@keyframes tab-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- Full-size / maximized window: 2-column masonry layout ---------- */
+/* On a wide (e.g. maximized) window, spread the sections across two
+   CSS-multi-columns instead of one long, edge-to-edge-stretched column -
+   makes the Control Panel actually look/feel like a full desktop app
+   dashboard rather than a small utility panel that's just been stretched.
+   CSS multi-column (not CSS Grid) is used specifically because it handles
+   variable-height sections (Saved Players list, Match History, etc.)
+   gracefully without manual row placement. */
+@media (min-width: 900px) {
+  .launcher-tab-panel.active {
+    display: block;
+    column-count: 2;
+    column-gap: 14px;
+  }
+  .launcher-tab-panel.active > .launcher-section,
+  .launcher-tab-panel.active > #ps-result-root,
+  .launcher-tab-panel.active > #ef-root,
+  .launcher-tab-panel.active > #mp-root,
+  .launcher-tab-panel.active > #rf-root,
+  .launcher-tab-panel.active > #tp-result-root,
+  .launcher-tab-panel.active > #dop-result-root {
+    break-inside: avoid;
+    -webkit-column-break-inside: avoid;
+    margin-bottom: 14px;
+  }
+}
+
+/* ---------- Display / column picker (Appearance tab) ---------- */
+.column-picker {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+.column-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #171c24;
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 5px 12px 5px 8px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background 0.15s ease;
+}
+.column-chip:hover { border-color: var(--accent-blue); }
+.column-chip input[type="checkbox"] {
+  accent-color: var(--accent-blue);
+  width: 13px;
+  height: 13px;
+  cursor: pointer;
+}
+.column-chip:has(input:checked),
+.column-chip.checked {
+  background: var(--accent-blue-dim);
+  color: #8fb4ff;
+  border-color: var(--accent-blue);
+}
+
+.launcher-section {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+}
+.launcher-section h2 {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: 0 0 10px;
+  font-weight: 700;
+}
+
+/* ---------- "My Match History" view toggle (Recent / By Session) ---------- */
+#match-history-section h2 {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+/* ---------- Session Performance Report cards ---------- */
+.session-report-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.session-card {
+  background: #171c24;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+.session-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+.session-card-dates {
+  font-size: 10.5px;
+  color: var(--text-muted);
+}
+.session-card-tilt {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  color: var(--accent-red);
+  background: rgba(255, 77, 94, 0.14);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.session-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+@media (max-width: 640px) {
+  .session-stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.session-stat { text-align: center; }
+.session-stat .val {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 14px;
+  color: var(--text-primary);
+  display: block;
+}
+.session-stat .val.good { color: var(--accent-green); }
+.session-stat .val.bad { color: var(--accent-red); }
+.session-stat .lbl {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.control-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.control-row label {
+  width: 110px;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.control-row input[type="text"],
+.control-row select {
+  flex: 1;
+  background: #0f1319;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 6px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.control-row input[type="color"] {
+  width: 40px;
+  height: 28px;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.control-row input[type="range"] {
+  flex: 1;
+}
+/* Small numeric value labels next to sliders (e.g. "92%", "1.0x") - NOT
+   a generic rule for every <span> in a control-row, since several
+   toggle-switch rows use a plain <span> for their (often long)
+   description text, which this fixed 44px width would otherwise force
+   into an unreadable single-word-per-line column (see the "range-value"
+   class applied specifically to the slider labels below in
+   launcher.html). */
+.control-row .range-value {
+  width: 44px;
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 11px;
+  color: var(--text-muted);
+}
+/* Toggle-switch description text (Team Comparison, Win Probability,
+   Discord Alerts, Window & Tray Behavior, FACEIT Mode, etc.) and status
+   labels (e.g. "Not connected") - should wrap normally within the
+   available row width, never be squeezed down to a fixed/min-content
+   width. Excludes `.range-value` (small slider value labels, handled
+   above) and `.status-dot` (small fixed-size colored circles, which
+   `flex: 1` would otherwise stretch to fill the row). */
+.control-row > span:not(.range-value):not(.status-dot) {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+.hint code {
+  background: #0f1319;
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.primary-btn,
+.secondary-btn,
+.danger-btn {
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.15s ease, background 0.15s ease;
+}
+.primary-btn:active,
+.secondary-btn:active,
+.danger-btn:active {
+  transform: scale(0.97);
+}
+.primary-btn {
+  background: linear-gradient(135deg, var(--accent-blue), #3f7de0);
+  color: white;
+  border: none;
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  flex: 1;
+  box-shadow: 0 4px 14px rgba(76, 141, 255, 0.3);
+}
+.secondary-btn {
+  background: transparent;
+  border: 1px solid var(--line-strong);
+  color: var(--text-secondary);
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.secondary-btn:hover { border-color: var(--accent-blue); color: var(--text-primary); }
+.danger-btn {
+  background: transparent;
+  border: 1px solid rgba(255, 77, 94, 0.4);
+  color: var(--accent-red);
+  padding: 9px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+.danger-btn:hover { border-color: var(--accent-red); background: var(--accent-red-dim); }
+
+/* ---------- My Match History (GSI K/D trend) ---------- */
+.match-history-summary {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.mh-stat {
+  flex: 1;
+  text-align: center;
+  padding: 8px 4px;
+  border-radius: 8px;
+  background: #171c24;
+  border: 1px solid var(--border-subtle);
+}
+.mh-value {
+  display: block;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.mh-value.mh-trend-up { color: var(--accent-green); }
+.mh-value.mh-trend-down { color: var(--accent-red); }
+.mh-label {
+  font-size: 9px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.sparkline-wrap {
+  position: relative;
+  height: 64px;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: #0e1116;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+.sparkline-wrap canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.sparkline-wrap .empty-state {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 12px;
+  font-size: 10.5px;
+}
+.match-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+  max-height: 220px;
+  overflow-y: auto;
+}
+.match-history-row {
+  display: grid;
+  grid-template-columns: 1.3fr 0.7fr 0.9fr 0.6fr 1fr;
+  gap: 6px;
+  align-items: center;
+  padding: 6px 10px;
+  background: #171c24;
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  font-size: 11px;
+}
+.match-history-row .mh-map { font-weight: 700; color: var(--text-primary); }
+.match-history-row .mh-score,
+.match-history-row .mh-kda { color: var(--text-secondary); }
+.match-history-row .mh-kd-value { font-weight: 800; text-align: center; }
+.match-history-row .mh-when { color: var(--text-muted); font-size: 10px; text-align: right; }
+
+/* ---------- Player Tracking (FACEIT + Discord) ---------- */
+.tracked-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 10px;
+}
+.tracked-player-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: #171c24;
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+}
+.tracked-player-name {
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text-primary);
+  flex-shrink: 0;
+}
+.tracked-player-status {
+  flex: 1;
+  font-size: 11px;
+  color: var(--text-muted);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.tracked-player-remove-btn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid rgba(248, 113, 113, 0.4);
+  color: #f87171;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+/* ---------- Real hotkey-capture UI ---------- */
+.hotkey-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.hotkey-row label {
+  width: 150px;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.hotkey-capture-btn {
+  flex: 1;
+  background: #0f1319;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  padding: 7px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: inherit;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+.hotkey-capture-btn:hover { border-color: var(--accent-blue); }
+.hotkey-capture-btn.recording {
+  background: var(--accent-orange-dim);
+  border-color: var(--accent-orange);
+  color: #f3b46a;
+  animation: hotkey-pulse 1s ease-in-out infinite;
+}
+@keyframes hotkey-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(242, 169, 59, 0.35); }
+  50% { box-shadow: 0 0 0 4px rgba(242, 169, 59, 0); }
+}
+
+/* ---------- Setup Wizard / status indicators ---------- */
+.badge-optional {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  border-radius: 999px;
+  padding: 1px 8px;
+  margin-left: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.hint-inline {
+  font-size: 10px;
+  color: var(--text-muted);
+  font-weight: 400;
+}
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: #2a313d;
+}
+.status-dot.dot-ok { background: var(--accent-green); }
+.status-dot.dot-missing { background: var(--accent-red); }
+#gsi-status-label { font-size: 11.5px; color: var(--text-secondary); }
+
+/* ---------- Saved players toolbar (search/sort) ---------- */
+.saved-players-toolbar {
+  gap: 6px;
+}
+.saved-players-toolbar input[type="text"] {
+  flex: 2;
+}
+.saved-players-toolbar select {
+  flex: 2;
+}
+#saved-players-sort-dir-btn {
+  flex: 0 0 auto;
+  padding: 6px 10px;
+}
+
+/* ---------- FACEIT Mode toggle switch ---------- */
+#faceit-mode-section {
+  border-color: rgba(242, 169, 59, 0.35);
+}
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: #2a313d;
+  border-radius: 999px;
+  transition: background-color 0.2s ease;
+}
+.toggle-slider::before {
+  position: absolute;
+  content: "";
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background-color: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background-color: var(--accent-orange);
+}
+.toggle-switch input:checked + .toggle-slider::before {
+  transform: translateX(18px);
+}
+#faceit-mode-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+/* ---------- Inline tracker (FACEIT Mode) ---------- */
+.inline-tracker-body {
+  max-height: 420px;
+  overflow-y: auto;
+  border-radius: 8px;
+  border: 1px solid var(--border-subtle);
+  background: #0e1116;
+}
+#inline-tracker-section .control-row input[type="text"] {
+  flex: 1;
+}
+#inline-tracker-section .control-row button {
+  flex: 0 0 auto;
+}
+
+/* ---------- Confirm dialog ---------- */
+.confirm-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(5, 7, 10, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+.confirm-dialog {
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 18px;
+  max-width: 320px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+.confirm-dialog p {
+  font-size: 12.5px;
+  color: var(--text-primary);
+  margin: 0 0 14px;
+  line-height: 1.5;
+}
+.confirm-dialog-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.preview-wrap {
+  position: relative;
+  height: 90px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 10px;
+  background: #0a0d12;
+}
+#preview-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+#preview-panel {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  background: rgba(10, 13, 18, 0.4);
+}
+
+.launcher-footer {
+  font-size: 10px;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 4px 0 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Saved players - tactical HUD "bracket-card" player profile              */
+/* (matches the approved design-preview: hero-row with name/badges +      */
+/* pulsing-ring avatar, JetBrains Mono stat tiles, corner brackets)        */
+/* ---------------------------------------------------------------------- */
+.saved-players-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* .saved-player-item gets its dark gradient background + corner-bracket
+   treatment from the shared rule in styles.css (see the .launcher-section,
+   .saved-player-item, ... selector list) - no duplicate rule needed here. */
+.saved-player-item {
+  padding: 14px 16px 12px;
+}
+
+.saved-player-card { position: relative; }
+
+.hero-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.hero-name-row { display: flex; align-items: center; gap: 8px; }
+.hero-name {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.15;
+  word-break: break-word;
+}
+
+.badges { display: flex; gap: 8px; margin-top: 8px; flex-wrap: wrap; }
+.badge {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 10px;
+  border-radius: 999px;
+}
+.badge.lvl { background: var(--accent-orange-dim); color: #f5c078; }
+.badge.elo { background: var(--accent-blue-dim); color: #8fb4ff; }
+
+.saved-player-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #2a313d; border: 2px solid var(--line-strong);
+  object-fit: cover; display: block;
+}
+
+.saved-player-stats.stat-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.tile {
+  border-radius: 10px;
+  padding: 10px 12px;
+  position: relative;
+  overflow: hidden;
+}
+.tile .lbl {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.5px; opacity: 0.85; font-family: var(--font-display);
+}
+.tile .val {
+  font-family: var(--font-mono); font-size: 18px; font-weight: 700;
+  display: block; margin-top: 2px;
+}
+.tile.blue { background: linear-gradient(135deg, rgba(76,141,255,.22), rgba(76,141,255,.06)); color: #8fb4ff; }
+.tile.gold { background: linear-gradient(135deg, rgba(242,169,59,.24), rgba(242,169,59,.06)); color: #f5c078; }
+.tile.green { background: linear-gradient(135deg, rgba(57,229,138,.22), rgba(57,229,138,.06)); color: #6be097; }
+.tile.violet { background: linear-gradient(135deg, rgba(157,123,255,.22), rgba(157,123,255,.06)); color: #b79bfb; }
+
+.tile.recent-tile { grid-column: 1 / -1; text-align: center; }
+.tile.recent-tile .recent-badges { justify-content: center; margin-top: 4px; }
+
+.recent-badges {
+  display: flex;
+  gap: 4px;
+}
+.recent-badge {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+}
+.recent-badge.win { background: var(--accent-green); }
+.recent-badge.loss { background: var(--accent-red); }
+.recent-badge.na { background: #4a5261; }
+
+.saved-player-note { margin-top: 10px; }
+.saved-player-note textarea {
+  width: 100%;
+  min-height: 56px;
+  background: #0f1319;
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 12px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.saved-player-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.saved-player-actions button {
+  flex: 1;
+  font-size: 11px;
+  padding: 6px 10px;
+}
+.saved-player-actions .danger-btn {
+  color: #f87171;
+  border-color: rgba(248, 113, 113, 0.4);
+}
+
+.saved-player-meta {
+  font-size: 9.5px;
+  color: var(--text-muted);
+  margin-top: 6px;
+  text-align: right;
+}

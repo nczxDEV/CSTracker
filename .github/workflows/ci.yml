@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: Backend build & test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cs2-overlay-backend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.5"
+          cache: "npm"
+          cache-dependency-path: cs2-overlay-backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build (TypeScript)
+        run: npm run build
+
+      - name: Run unit tests
+        run: npm test
+
+  frontend-lint:
+    name: Frontend sanity checks
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: cs2-overlay-frontend
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.5"
+
+      - name: Validate tauri.conf.json is well-formed JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('src-tauri/tauri.conf.json', 'utf-8')); console.log('tauri.conf.json OK')"
+
+      - name: Syntax-check frontend JS files
+        run: |
+          for f in src/*.js; do
+            node --check "$f" || exit 1
+          done
+          echo "All frontend JS files parse OK"

@@ -1,0 +1,211 @@
+/* ---------------------------------------------------------------------- */
+/* "Bejelentkezés FACEIT-tel / Steammel" - Account tab + header avatar     */
+/* button (see account.js). Reuses the shared --bg-*/--accent-* variables */
+/* and .launcher-section/.ps-card visual language already established by  */
+/* styles.css/launcher.css - only the classes specific to this feature    */
+/* are defined here.                                                      */
+/* ---------------------------------------------------------------------- */
+
+/* -------- header avatar button (top-right of .launcher-header) -------- */
+.account-avatar-btn {
+  position: absolute;
+  top: 12px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #2a3242, #171c24);
+  border: 2px solid var(--accent-blue);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--text-primary);
+  box-shadow: 0 0 0 3px var(--accent-blue-dim);
+  padding: 0;
+  z-index: 2;
+}
+.account-avatar-btn:hover { filter: brightness(1.15); }
+.account-avatar-status-dot {
+  position: absolute;
+  right: -2px;
+  bottom: -2px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  border: 2px solid var(--bg-panel);
+}
+.account-avatar-status-dot.linked { background: var(--accent-green); }
+
+/* -------- Account tab: profile header card -------- */
+.account-header-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.account-header-avatar {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(160deg, #2a3242, #171c24);
+  border: 2px solid var(--accent-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 20px;
+  flex: none;
+  overflow: hidden;
+}
+.account-header-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.account-header-id { min-width: 0; flex: 1; }
+.account-header-name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--text-primary);
+}
+.account-header-sub {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+/* -------- Linked Accounts rows -------- */
+.linked-account-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 8px;
+}
+.linked-account-row:last-of-type { margin-bottom: 0; }
+.linked-account-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-weight: 800;
+  font-size: 12px;
+  flex: none;
+  overflow: hidden;
+}
+.linked-account-icon img { width: 100%; height: 100%; object-fit: cover; border-radius: 7px; }
+.linked-account-icon.faceit { background: var(--accent-orange-dim); color: var(--accent-orange); }
+.linked-account-icon.steam { background: var(--accent-blue-dim); color: var(--accent-blue); }
+.linked-account-main { flex: 1; min-width: 0; }
+.linked-account-provider {
+  font-size: 9.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+.linked-account-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* -------- "My Leetify Stats" -------- */
+.leetify-rating-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.leetify-rating-cell {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  border-radius: 8px;
+  padding: 10px 6px;
+  text-align: center;
+}
+.leetify-rating-cell .val {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--text-primary);
+  display: block;
+}
+.leetify-rating-cell .val.pos { color: var(--accent-green); }
+.leetify-rating-cell .val.neg { color: var(--accent-red); }
+.leetify-rating-cell .lbl {
+  font-size: 8.5px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-top: 2px;
+  display: block;
+}
+
+.leetify-stat-line-list { margin-bottom: 12px; }
+.leetify-stat-line {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 2px;
+  font-size: 12.5px;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.leetify-stat-line:last-child { border-bottom: none; }
+.leetify-stat-line .lbl { color: var(--text-secondary); }
+.leetify-stat-line .val { font-family: var(--font-mono); font-weight: 700; color: var(--text-primary); }
+
+.leetify-recent-matches-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin-bottom: 4px;
+}
+.leetify-rm-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11.5px;
+  padding: 5px 2px;
+}
+.leetify-rm-badge {
+  width: 19px;
+  height: 19px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  font-weight: 800;
+  flex: none;
+}
+.leetify-rm-badge.win { background: var(--accent-green-dim); color: var(--accent-green); }
+.leetify-rm-badge.loss { background: var(--accent-red-dim); color: var(--accent-red); }
+.leetify-rm-badge.tie { background: rgba(255, 255, 255, 0.06); color: var(--text-muted); }
+.leetify-rm-map { flex: 1; color: var(--text-secondary); }
+.leetify-rm-rating { font-family: var(--font-mono); font-weight: 700; }
+.leetify-rm-rating.pos { color: var(--accent-green); }
+.leetify-rm-rating.neg { color: var(--accent-red); }
+
+/* Mandatory "Data Provided by Leetify" badge - see faceit-match-history's
+   sibling `.leetify-attribution-link` styling in styles.css for the same
+   pattern (official, unmodified badge image, visually separated). */
+.leetify-account-attribution {
+  display: block;
+  margin-top: 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border-subtle);
+  line-height: 0;
+}
+.leetify-account-attribution img { height: 28px; display: block; }

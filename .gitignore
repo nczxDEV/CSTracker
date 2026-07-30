@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment secrets - never commit real API keys
+.env
+
+# Backend local data (SQLite database, generated at runtime)
+cs2-overlay-backend/data/
+
+# Backend build output
+cs2-overlay-backend/dist/
+
+# Tauri / Rust build output
+cs2-overlay-frontend/src-tauri/target/
+cs2-overlay-frontend/src-tauri/binaries/
+
+# OS/editor cruft
+.DS_Store
+Thumbs.db
+*.log

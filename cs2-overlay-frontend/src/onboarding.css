@@ -1,0 +1,288 @@
+/* First-launch Onboarding Wizard - gates the rest of the Control Panel
+   until the user enters their FACEIT + Steam API keys (see onboarding.js
+   `checkAndShow()`). Styled to match the reference onboarding design,
+   reusing this app's own "tactical HUD" palette/fonts (styles.css
+   --bg-panel/--accent-* variables, Rajdhani/Inter/JetBrains Mono) instead
+   of the reference's own hardcoded colors, so it feels native rather than
+   pasted-in. All prefixed with `onb-` to avoid any collision with the
+   rest of the Control Panel's CSS. */
+
+.onb-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000; /* above #startup-loading-overlay (999) and #launcher */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(circle at 30% 20%, var(--bg-panel-alt) 0%, var(--bg-void) 65%);
+  transition: opacity 0.25s ease;
+}
+.onb-overlay.onb-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.onb-wizard {
+  width: 560px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+}
+
+.onb-top {
+  padding: 20px 28px 0;
+}
+
+.onb-brand {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 16px;
+}
+.onb-brand span {
+  color: var(--accent-orange);
+}
+
+.onb-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 22px;
+}
+.onb-progress-seg {
+  flex: 1;
+  height: 3px;
+  border-radius: 2px;
+  background: var(--line);
+  overflow: hidden;
+}
+.onb-progress-seg i {
+  display: block;
+  height: 100%;
+  width: 0%;
+  background: var(--accent-blue);
+  transition: width 0.4s ease;
+}
+.onb-progress-seg.done i {
+  width: 100%;
+}
+.onb-progress-seg.active i {
+  width: 100%;
+  background: var(--accent-orange);
+}
+
+.onb-step {
+  display: none;
+  padding: 4px 28px 28px;
+}
+.onb-step.active {
+  display: block;
+  animation: onb-fade-in 0.35s ease;
+}
+
+@keyframes onb-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.onb-step h1 {
+  font-family: var(--font-display);
+  font-size: 21px;
+  font-weight: 700;
+  margin: 4px 0 6px;
+  color: var(--text-primary);
+}
+.onb-lead {
+  color: var(--text-secondary);
+  font-size: 13px;
+  line-height: 1.55;
+  margin: 0 0 22px;
+}
+
+.onb-badge-diamond {
+  width: 46px;
+  height: 46px;
+  margin-bottom: 14px;
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  background: linear-gradient(155deg, #7ec2f2, var(--accent-blue) 55%, #2c4f6d);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.3), 0 0 22px var(--accent-blue-dim);
+}
+
+.onb-step label {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+
+.onb-field {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.onb-field input[type="text"],
+.onb-field input[type="password"] {
+  flex: 1;
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  border-radius: 6px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12.5px;
+  outline: none;
+}
+.onb-field input:focus {
+  border-color: var(--accent-blue);
+}
+
+.onb-hint {
+  font-size: 11.5px;
+  color: var(--text-muted);
+  margin: 6px 0 20px;
+  line-height: 1.5;
+}
+.onb-hint a,
+.onb-hint code {
+  color: var(--accent-blue);
+}
+.onb-hint a {
+  text-decoration: none;
+}
+.onb-hint a:hover {
+  text-decoration: underline;
+}
+.onb-hint code {
+  font-family: var(--font-mono);
+  background: var(--bg-panel-alt);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
+
+.onb-btn {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 12.5px;
+  letter-spacing: 0.03em;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: transform 0.1s ease, opacity 0.15s ease;
+}
+.onb-btn:active {
+  transform: scale(0.97);
+}
+.onb-btn-primary {
+  background: var(--accent-blue);
+  color: #06090f;
+}
+.onb-btn-primary:hover {
+  opacity: 0.9;
+}
+.onb-btn-ghost {
+  background: transparent;
+  color: var(--text-secondary);
+}
+.onb-btn-ghost:hover {
+  color: var(--text-primary);
+}
+.onb-btn-test {
+  background: var(--bg-panel-alt);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+.onb-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.onb-status-line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  margin-top: 10px;
+  min-height: 20px;
+  color: var(--text-secondary);
+}
+.onb-status-line.onb-ok {
+  color: var(--accent-green);
+}
+.onb-status-line.onb-err {
+  color: var(--accent-red);
+}
+
+.onb-spinner {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--line);
+  border-top-color: var(--accent-blue);
+  animation: onb-spin 0.7s linear infinite;
+}
+@keyframes onb-spin {
+  to { transform: rotate(360deg); }
+}
+
+.onb-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 22px;
+}
+.onb-checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.onb-checklist li:last-child {
+  border-bottom: none;
+}
+.onb-check-ico {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-green-dim);
+  color: var(--accent-green);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  flex: none;
+}
+
+.onb-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 6px;
+}
+.onb-actions .onb-right {
+  display: flex;
+  gap: 8px;
+}
+
+.onb-skip-link {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-muted);
+  margin-top: 14px;
+  cursor: pointer;
+}
+.onb-skip-link:hover {
+  color: var(--text-secondary);
+}

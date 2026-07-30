@@ -1,0 +1,147 @@
+/* ---------------------------------------------------------------------- */
+/* "Tactical Glass" UI Theme - an alternate cosmetic skin for the Control  */
+/* Panel's cards/nav/buttons, selectable in the Appearance tab (see       */
+/* DEFAULT_SETTINGS.uiTheme in settings-store.js and the "UI Theme"       */
+/* section in launcher.html). Applied by adding a `theme-glass` class to  */
+/* <body> (see settings-store.js `applyUiTheme()`) - every rule below is  */
+/* scoped under that class, so with the class ABSENT the app looks        */
+/* exactly like it always has ("Tactical HUD" - bracket-corner cards,     */
+/* scanline header, cut-corner tabs) with zero extra CSS weight.          */
+/*                                                                        */
+/* Deliberately INDEPENDENT of the "App Background" setting (solid/       */
+/* gradient/matrix/galaxy/custom) - this only reskins card/component      */
+/* chrome (blurred glass cards, pill nav, indigo accent, rounded          */
+/* corners), not the window's background fill/effect.                    */
+/* ---------------------------------------------------------------------- */
+
+body.theme-glass {
+  --glass-accent: #6366F1;
+  --glass-accent-dim: rgba(99, 102, 241, 0.16);
+  --glass-border: rgba(255, 255, 255, 0.08);
+}
+
+/* ---------- Header: drop the scanline sweep, add a frosted-glass look ---------- */
+body.theme-glass .launcher-header {
+  background: rgba(255, 255, 255, 0.035);
+  backdrop-filter: blur(14px);
+  border-radius: 16px;
+}
+body.theme-glass .launcher-header::before {
+  display: none;
+}
+
+/* ---------- Tab nav: pill container + pill tabs instead of cut-corner segments ---------- */
+body.theme-glass .launcher-nav {
+  background: rgba(0, 0, 0, 0.32);
+  border-radius: 12px;
+}
+body.theme-glass .nav-tab {
+  clip-path: none;
+  border-radius: 8px;
+}
+body.theme-glass .nav-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+body.theme-glass .nav-tab.active {
+  background: var(--glass-accent);
+  color: #fff;
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+}
+body.theme-glass .nav-tab.active::after {
+  display: none;
+}
+
+/* ---------- Cards: frosted glass instead of bracket-corner HUD panels ---------- */
+body.theme-glass .launcher-section,
+body.theme-glass .ps-card,
+body.theme-glass .ef-card,
+body.theme-glass .mp-card,
+body.theme-glass .saved-player-item,
+body.theme-glass .team-compare-bar,
+body.theme-glass .win-probability,
+body.theme-glass .tracked-player-item,
+body.theme-glass .ps-hero-banner,
+body.theme-glass .ef-hero-banner,
+body.theme-glass .mp-hero-banner {
+  position: relative;
+  background: rgba(255, 255, 255, 0.035) !important;
+  backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border) !important;
+  border-radius: 16px !important;
+  overflow: hidden;
+}
+
+/* Disable the tactical-HUD bracket-corner accent (the shared ::before
+   used by launcher-section/team-compare-bar/win-probability/
+   saved-player-item/tracked-player-item, see styles.css) - the glass
+   theme uses a top gradient bar instead (added below). */
+body.theme-glass .launcher-section::before,
+body.theme-glass .team-compare-bar::before,
+body.theme-glass .win-probability::before,
+body.theme-glass .saved-player-item::before,
+body.theme-glass .tracked-player-item::before {
+  display: none;
+}
+
+/* Top gradient accent bar - same "glass" signature as the hero banners below. */
+body.theme-glass .launcher-section::after,
+body.theme-glass .ps-card::after,
+body.theme-glass .ef-card::after,
+body.theme-glass .mp-card::after,
+body.theme-glass .saved-player-item::after,
+body.theme-glass .team-compare-bar::after,
+body.theme-glass .win-probability::after,
+body.theme-glass .tracked-player-item::after {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 3px;
+  background: linear-gradient(90deg, var(--glass-accent), transparent);
+  pointer-events: none;
+}
+
+/* Hero banners already have their own radial-gradient + grid-lines
+   background/border baked in (player-summary.css/elo-forecast.css/
+   map-pool-radar.css) - keep those (don't force a flat background over
+   them), just soften the border/radius/blur to match the glass language. */
+body.theme-glass .ps-hero-banner,
+body.theme-glass .ef-hero-banner,
+body.theme-glass .mp-hero-banner {
+  background: inherit !important;
+  border-color: rgba(99, 102, 241, 0.25) !important;
+}
+
+/* ---------- Buttons ---------- */
+body.theme-glass .primary-btn {
+  background: var(--glass-accent);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+body.theme-glass .primary-btn:hover {
+  box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+body.theme-glass .secondary-btn:hover {
+  border-color: var(--glass-accent);
+}
+body.theme-glass .danger-btn:hover {
+  border-color: var(--accent-red);
+}
+
+/* ---------- Toggle switches ---------- */
+body.theme-glass .toggle-switch input:checked + .toggle-slider {
+  background-color: var(--glass-accent);
+}
+
+/* ---------- Badges/tags/status dots: rounder, glass-tinted ---------- */
+body.theme-glass .badge-optional,
+body.theme-glass .tag {
+  border-radius: 999px;
+}
+body.theme-glass .status-dot.dot-ok {
+  box-shadow: 0 0 8px var(--accent-green);
+}
+
+/* ---------- Saved-player / Player Summary hero name-badges: indigo instead of gold/blue-only accents ---------- */
+body.theme-glass .badge.elo,
+body.theme-glass .ps-hero-elo-block {
+  background: var(--glass-accent-dim) !important;
+  border-color: rgba(99, 102, 241, 0.3) !important;
+}

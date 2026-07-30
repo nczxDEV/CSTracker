@@ -1,0 +1,67 @@
+/* ---------------------------------------------------------------------- */
+/* "FACEIT Match History" card - Player Summary tab. GSI-FREE: unlike     */
+/* "My Match History" (which needs a live GSI connection and only ever    */
+/* covers the local player), this works for ANY FACEIT nickname. Reuses   */
+/* the .ps-card/.recent-badge visual language already established by      */
+/* player-summary.css/recent-form.css.                                    */
+/* ---------------------------------------------------------------------- */
+
+.fmh-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.fmh-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-subtle);
+  cursor: pointer;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+.fmh-row:hover,
+.fmh-row:focus-visible {
+  background: var(--bg-row-hover);
+  border-color: var(--line-strong);
+  outline: none;
+}
+
+.fmh-row .recent-badge {
+  width: 24px;
+  height: 24px;
+  font-size: 11px;
+  border-radius: 6px;
+  flex: none;
+}
+
+.fmh-row-main {
+  flex: 1;
+  min-width: 0;
+}
+.fmh-row-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fmh-row-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.fmh-row-score {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  flex: none;
+}

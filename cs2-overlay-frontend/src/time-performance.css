@@ -1,0 +1,266 @@
+/* ---------------------------------------------------------------------- */
+/* Time Performance tab - "when do you play best" heatmap. GSI-FREE: works */
+/* for any FACEIT nickname, built purely from FACEIT match history.        */
+/* ---------------------------------------------------------------------- */
+
+#tp-result-root {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.tp-empty-state {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 28px 16px;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* ---------- Hero banner ---------- */
+.tp-hero-banner {
+  position: relative;
+  overflow: hidden;
+  border-radius: 14px;
+  padding: 20px 24px;
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(57, 229, 138, 0.14), transparent 55%),
+    radial-gradient(90% 120% at 100% 100%, rgba(76, 141, 255, 0.12), transparent 55%),
+    linear-gradient(160deg, #181d27, #0d1015 70%);
+  border: 1px solid rgba(57, 229, 138, 0.25);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.tp-hero-primary { flex: 1; min-width: 220px; }
+.tp-hero-eyebrow {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  margin-bottom: 6px;
+}
+.tp-hero-headline {
+  font-family: var(--font-display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+  line-height: 1.2;
+}
+.tp-hero-headline b { color: var(--accent-green); }
+.tp-hero-sub {
+  margin-top: 6px;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+.tp-hero-divider {
+  width: 1px;
+  align-self: stretch;
+  background: var(--border-subtle);
+}
+.tp-hero-worst {
+  flex-shrink: 0;
+  min-width: 190px;
+}
+.tp-hero-worst-label {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.tp-hero-worst-value {
+  margin-top: 4px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--accent-red);
+}
+.tp-hero-worst-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ---------- Generic cards ---------- */
+.tp-card {
+  background: linear-gradient(160deg, #171c26, #12161d);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.tp-card h2 {
+  font-family: var(--font-display);
+  font-size: 12.5px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--text-muted);
+  margin: 0 0 4px;
+  font-weight: 700;
+}
+.tp-card .tp-card-hint {
+  font-size: 10.5px;
+  color: var(--text-muted);
+  margin: 0 0 14px;
+}
+
+/* ---------- Heatmap grid (the signature element) ---------- */
+.tp-heatmap-scroll {
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.tp-heatmap {
+  display: grid;
+  grid-template-columns: 34px repeat(24, 1fr);
+  gap: 3px;
+  min-width: 620px;
+}
+.tp-heatmap-hourlabel {
+  grid-row: 1;
+  font-size: 8.5px;
+  color: var(--text-muted);
+  text-align: center;
+  font-family: var(--font-mono);
+}
+.tp-heatmap-daylabel {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+}
+.tp-cell {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  border-radius: 3px;
+  min-height: 15px;
+  transition: transform 0.12s ease;
+  cursor: default;
+}
+.tp-cell:hover {
+  transform: scale(1.35);
+  z-index: 2;
+  outline: 1px solid rgba(255, 255, 255, 0.5);
+}
+.tp-cell.no-data {
+  background: #171b22;
+  border: 1px solid var(--border-subtle);
+}
+
+.tp-heatmap-legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 10px;
+  color: var(--text-muted);
+}
+.tp-legend-scale {
+  display: flex;
+  height: 10px;
+  width: 130px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.tp-legend-scale span { flex: 1; }
+
+/* ---------- Segment cards (Morning/Afternoon/Evening/Night) ---------- */
+.tp-segment-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+@media (max-width: 700px) {
+  .tp-segment-grid { grid-template-columns: repeat(2, 1fr); }
+}
+.tp-segment-tile {
+  padding: 14px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-panel-alt);
+  text-align: center;
+}
+.tp-segment-tile.best {
+  border-color: rgba(57, 229, 138, 0.5);
+  background: linear-gradient(160deg, rgba(57, 229, 138, 0.1), var(--bg-panel-alt));
+}
+.tp-segment-icon { font-size: 18px; margin-bottom: 6px; }
+.tp-segment-name {
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--text-muted);
+}
+.tp-segment-tile.best .tp-segment-name { color: var(--accent-green); }
+.tp-segment-winrate {
+  font-family: var(--font-mono);
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+.tp-segment-matches {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+/* ---------- Weekday vs Weekend comparison ---------- */
+.tp-vs-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+.tp-vs-row:last-child { margin-bottom: 0; }
+.tp-vs-label {
+  width: 80px;
+  flex-shrink: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+.tp-vs-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: #171c26;
+  border: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+.tp-vs-fill {
+  height: 100%;
+  border-radius: 999px;
+}
+.tp-vs-fill.weekday { background: linear-gradient(90deg, var(--accent-blue), #7ab0ff); }
+.tp-vs-fill.weekend { background: linear-gradient(90deg, var(--accent-green), #7cf0b8); }
+.tp-vs-value {
+  width: 52px;
+  flex-shrink: 0;
+  text-align: right;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+.tp-vs-sub {
+  font-size: 10px;
+  color: var(--text-muted);
+  margin-top: -8px;
+  margin-bottom: 10px;
+  margin-left: 94px;
+}
+
+.tp-secondary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+@media (max-width: 760px) {
+  .tp-secondary-grid { grid-template-columns: 1fr; }
+}
