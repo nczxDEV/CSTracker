@@ -1,6 +1,6 @@
 {
   "name": "cs2-overlay-frontend",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "CS Tracker desktop client (Tauri) - Control Panel with an inline CS2 stats tracker, GSI support, and Setup Wizard.",
   "scripts": {
     "tauri": "tauri",

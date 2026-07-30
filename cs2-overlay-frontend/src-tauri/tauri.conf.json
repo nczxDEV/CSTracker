@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "CS Tracker",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "identifier": "com.cstracker.app",
   "build": {
     "frontendDist": "../src"
@@ -45,16 +45,17 @@
     },
     "createUpdaterArtifacts": true
   },
-  "plugins": {
+    "plugins": {
     "updater": {
-      "active": false,
+      "active": true,
       "endpoints": [
-        "https://github.com/YOUR_GITHUB_USERNAME/YOUR_REPO_NAME/releases/latest/download/latest.json"
+        "https://github.com/nczxDEV/CSTracker/releases/latest/download/latest.json"
       ],
-      "pubkey": "PASTE_YOUR_GENERATED_PUBLIC_KEY_HERE",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ2MzM1OEQ3MkMxNEQxQkYKUldTLzBSUXMxMWd6UnM5Zy9ic0t1MG9kMmpxU240Zm5GL055elM0MHFLMC9tcGl1Nmo1UlBibEwK",
       "windows": {
         "installMode": "passive"
       }
     }
   }
+
 }
