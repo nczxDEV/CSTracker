@@ -145,8 +145,8 @@ describe('PlayersNormalizer', () => {
 
   it('computes recentForm (GSI-free "Recent Form" over up to 20 matches) from the same faceit history', () => {
     const faceitPlayer = { player_id: 'p1' };
-    // Most-recent-first: W, W, L, L, L (a 3-loss active streak)
-    const results: Array<'W' | 'L'> = ['W', 'W', 'L', 'L', 'L'];
+    // Most-recent-first: L, L, L, W, W (a 3-loss active streak)
+    const results: Array<'W' | 'L'> = ['L', 'L', 'L', 'W', 'W'];
     const faceitHistory = {
       items: results.map((r) => ({
         teams: {
