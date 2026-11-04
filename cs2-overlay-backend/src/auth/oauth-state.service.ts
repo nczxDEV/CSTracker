@@ -34,6 +34,10 @@ export class OAuthStateService {
 
   constructor(private readonly database: DatabaseService) {}
 
+  cancel(provider: string): void {
+    this.database.connection.prepare('DELETE FROM oauth_login_attempts WHERE provider = ?').run(provider);
+  }
+
   /**
    * Creates and persists a new state value for the given provider,
    * optionally alongside a PKCE `codeVerifier` (FACEIT only - see

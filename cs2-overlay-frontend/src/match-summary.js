@@ -26,7 +26,7 @@
     return String(value ?? "")
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
   function renderError(title, detail) {
@@ -95,6 +95,7 @@
         ${statCell(player.adr, 1)}
         ${statCell(player.headshotsPercent !== null ? `${player.headshotsPercent}%` : null)}
         ${statCell(player.mvps)}
+        ${statCell(player.faceitRating, 2)}
       </div>`;
   }
 
@@ -117,6 +118,7 @@
             <span class="col-num">ADR</span>
             <span class="col-num">HS%</span>
             <span class="col-num">MVPs</span>
+            <span class="col-num">FACEIT rating</span>
           </div>
           ${rows}
         </div>
@@ -205,7 +207,7 @@
       ${teamSection(summary.teamA, summary.teamA.won === true)}
       ${teamSection(summary.teamB, summary.teamB.won === true)}
 
-      <div class="ms-notice">${limitationNotices.join(" ")}</div>
+      <div class="ms-notice">${limitationNotices.join(" ")} FACEIT rating is shown only when supplied by the API. The starred player is CS Tracker's statistical match pick, not an official FACEIT MVP designation. Highlight videos are not exposed by the public FACEIT Data API.</div>
     `;
 
     // Animate comparison bars once, matching match-summary demo timing.

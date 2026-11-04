@@ -1,0 +1,296 @@
+[
+  {
+    "Name": "CTSpawn",
+    "EnglishName": "CT Start",
+    "MinBound": {
+      "X": -1136,
+      "Y": -2048,
+      "Z": -239.96901
+    },
+    "MaxBound": {
+      "X": -449.99997,
+      "Y": -1312,
+      "Z": -23.999985
+    }
+  },
+  {
+    "Name": "LeftAlley",
+    "EnglishName": "Left Alley",
+    "MinBound": {
+      "X": -1520,
+      "Y": -1288,
+      "Z": -264
+    },
+    "MaxBound": {
+      "X": -678.2615,
+      "Y": 1328,
+      "Z": 168.00006
+    }
+  },
+  {
+    "Name": "LeftAlley",
+    "EnglishName": "Left Alley",
+    "MinBound": {
+      "X": -1112,
+      "Y": 864,
+      "Z": -159.969
+    },
+    "MaxBound": {
+      "X": -200,
+      "Y": 1064,
+      "Z": -53.4688
+    }
+  },
+  {
+    "Name": "Market",
+    "EnglishName": "Market",
+    "MinBound": {
+      "X": 144,
+      "Y": -800,
+      "Z": -151.969
+    },
+    "MaxBound": {
+      "X": 1064,
+      "Y": -72,
+      "Z": -45.46879
+    }
+  },
+  {
+    "Name": "RightAlley",
+    "EnglishName": "Right Alley",
+    "MinBound": {
+      "X": -600,
+      "Y": -1300,
+      "Z": -241.96901
+    },
+    "MaxBound": {
+      "X": 136,
+      "Y": -72,
+      "Z": 88.00003
+    }
+  },
+  {
+    "Name": "Middle",
+    "EnglishName": "Middle",
+    "MinBound": {
+      "X": -192,
+      "Y": 280,
+      "Z": -168
+    },
+    "MaxBound": {
+      "X": 496,
+      "Y": 2025,
+      "Z": -53.46879
+    }
+  },
+  {
+    "Name": "Tunnel",
+    "EnglishName": "Tunnel",
+    "MinBound": {
+      "X": 225,
+      "Y": -48.00003,
+      "Z": -159.969
+    },
+    "MaxBound": {
+      "X": 376,
+      "Y": 272,
+      "Z": -45.468796
+    }
+  },
+  {
+    "Name": "LongHall",
+    "EnglishName": "Long Hall",
+    "MinBound": {
+      "X": 497.46005,
+      "Y": 125,
+      "Z": -151.969
+    },
+    "MaxBound": {
+      "X": 987.38416,
+      "Y": 1824,
+      "Z": 136
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -720.00006,
+      "Y": 1832,
+      "Z": 0.031253815
+    },
+    "MaxBound": {
+      "X": 840,
+      "Y": 2544,
+      "Z": 176
+    }
+  },
+  {
+    "Name": "Upstairs",
+    "EnglishName": "Upstairs",
+    "MinBound": {
+      "X": 536,
+      "Y": 2304,
+      "Z": 128.031
+    },
+    "MaxBound": {
+      "X": 992,
+      "Y": 2550.7798,
+      "Z": 248
+    }
+  },
+  {
+    "Name": "Window",
+    "EnglishName": "Window",
+    "MinBound": {
+      "X": 550,
+      "Y": 2150,
+      "Z": 128.031
+    },
+    "MaxBound": {
+      "X": 880,
+      "Y": 2240,
+      "Z": 234.531
+    }
+  },
+  {
+    "Name": "Window",
+    "EnglishName": "Window",
+    "MinBound": {
+      "X": 495,
+      "Y": 2456,
+      "Z": 152.031
+    },
+    "MaxBound": {
+      "X": 592,
+      "Y": 2544,
+      "Z": 258.531
+    }
+  },
+  {
+    "Name": "Balcony",
+    "EnglishName": "Balcony",
+    "MinBound": {
+      "X": 920,
+      "Y": 1984,
+      "Z": 128.031
+    },
+    "MaxBound": {
+      "X": 1000,
+      "Y": 2144,
+      "Z": 234.531
+    }
+  },
+  {
+    "Name": "WineCellar",
+    "EnglishName": "Wine Cellar",
+    "MinBound": {
+      "X": -650,
+      "Y": 1175,
+      "Z": -159.99998
+    },
+    "MaxBound": {
+      "X": -263.99997,
+      "Y": 1816,
+      "Z": 112.000015
+    }
+  },
+  {
+    "Name": "Apartment",
+    "EnglishName": "Apartment",
+    "MinBound": {
+      "X": -856,
+      "Y": -184.00012,
+      "Z": -35.06039
+    },
+    "MaxBound": {
+      "X": -443.23187,
+      "Y": 832,
+      "Z": 127.999985
+    }
+  },
+  {
+    "Name": "Apartment",
+    "EnglishName": "Apartment",
+    "MinBound": {
+      "X": -911.99994,
+      "Y": 839.9999,
+      "Z": 0.17267609
+    },
+    "MaxBound": {
+      "X": -727.99994,
+      "Y": 2000,
+      "Z": 110.573
+    }
+  },
+  {
+    "Name": "Apartment",
+    "EnglishName": "Apartment",
+    "MinBound": {
+      "X": -440.00003,
+      "Y": 352,
+      "Z": -156
+    },
+    "MaxBound": {
+      "X": 112,
+      "Y": 432,
+      "Z": 128
+    }
+  },
+  {
+    "Name": "FrontDoor",
+    "EnglishName": "Front Door",
+    "MinBound": {
+      "X": 776,
+      "Y": 1880,
+      "Z": 0.031246185
+    },
+    "MaxBound": {
+      "X": 1000,
+      "Y": 2248,
+      "Z": 106.531006
+    }
+  },
+  {
+    "Name": "Downstairs",
+    "EnglishName": "Downstairs",
+    "MinBound": {
+      "X": 552,
+      "Y": 2288,
+      "Z": 0.03125
+    },
+    "MaxBound": {
+      "X": 992,
+      "Y": 2551.9995,
+      "Z": 106.531
+    }
+  },
+  {
+    "Name": "Stairs",
+    "EnglishName": "Stairs",
+    "MinBound": {
+      "X": -167.99997,
+      "Y": 2064,
+      "Z": -160.00003
+    },
+    "MaxBound": {
+      "X": 200.00003,
+      "Y": 2550,
+      "Z": 112.00001
+    }
+  },
+  {
+    "Name": "Connector",
+    "EnglishName": "Connector",
+    "MinBound": {
+      "X": 24,
+      "Y": 1344,
+      "Z": -144
+    },
+    "MaxBound": {
+      "X": 560,
+      "Y": 1488,
+      "Z": 63.999992
+    }
+  }
+]

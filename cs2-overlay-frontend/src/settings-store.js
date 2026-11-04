@@ -39,6 +39,7 @@ const DEFAULT_SETTINGS = {
   // `applyUiTheme`); 'hud' needs no extra class since it's the default
   // look already baked into styles.css/launcher.css.
   uiTheme: "hud", // 'hud' | 'glass'
+  welcomeAnimation: true, // Once per full launch, using the locally linked profile.
   // 'custom' backgroundMode - a user-uploaded image, stored as a data URL
   // (see launcher.js `handleCustomBackgroundFile` - downscaled client-side
   // before storing, to keep localStorage usage reasonable). `null` until

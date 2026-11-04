@@ -22,6 +22,8 @@
 }
 
 .launcher-header {
+  /* Long pages must scroll instead of compressing the logo into a clipped strip. */
+  flex: 0 0 auto;
   position: relative;
   display: flex;
   flex-direction: column;

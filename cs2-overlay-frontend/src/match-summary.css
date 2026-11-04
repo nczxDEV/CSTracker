@@ -3,7 +3,7 @@
    the Control Panel document - see src-tauri/src/main.rs
    `open_match_summary_window` / faceit-match-history.js), so it does not
    rely on styles.css/launcher.css at all. Palette/typography/layout
-   match the approved reference design 1:1 (same --bg-*/--accent-*
+   match the approved reference design (same background and accent
    variables and Rajdhani/Inter/JetBrains Mono font stack already used
    everywhere else in this app), just made self-sufficient for a
    standalone window. */

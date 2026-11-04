@@ -196,6 +196,15 @@ describe('buildMatchSummary', () => {
     expect(all.filter((p) => p.isMatchMvp)).toHaveLength(1);
   });
 
+  it('keeps official rating values and does not estimate missing ratings', () => {
+    const input = JSON.parse(JSON.stringify(matchStats));
+    input.rounds[0].teams[0].players[0].player_stats['FACEIT Rating'] = '1.42';
+    const summary = buildMatchSummary(matchDetails, input, 'match-1')!;
+    const players = [...summary.teamA.players, ...summary.teamB.players];
+    expect(players.some(p => p.faceitRating === 1.42)).toBe(true);
+    expect(players.filter(p => p.faceitRating === null).length).toBe(players.length - 1);
+  });
+
   it('reports adrAvailable=true when at least one player has an ADR value, and kastAvailable is always false', () => {
     const summary = buildMatchSummary(matchDetails, matchStats, 'match-1')!;
     expect(summary.adrAvailable).toBe(true);

@@ -105,6 +105,7 @@ export function buildMatchHistoryList(history: any, playerId: string): FaceitMat
       teamScore,
       opponentScore,
       opponentTeamName,
+      teammates: playerFactionKey ? (teams[playerFactionKey]?.players ?? []).filter((p: any) => p.player_id !== playerId).map((p: any) => p.nickname).filter(Boolean) : [],
     });
   }
   return list;
@@ -139,6 +140,7 @@ function matchStatsTeamToFaction(statsTeam: any, matchDetails: any): 'faction1' 
 function buildPlayerFromStats(statsPlayer: any, rosterPlayer: any | undefined): FaceitMatchSummaryPlayer {
   const stats = statsPlayer?.player_stats ?? {};
   return {
+    faceitRating: extractStatNumber(stats, ['FACEIT Rating', 'Faceit Rating', 'Rating']),
     playerId: statsPlayer?.player_id ?? rosterPlayer?.player_id ?? '',
     nickname: statsPlayer?.nickname ?? rosterPlayer?.nickname ?? 'Unknown',
     avatar: rosterPlayer?.avatar ?? null,

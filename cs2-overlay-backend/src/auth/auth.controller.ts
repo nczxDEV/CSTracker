@@ -15,7 +15,9 @@ import { FaceitOAuthService } from './faceit-oauth.service';
 import { SteamAuthService } from './steam-auth.service';
 import { LinkedAccountsService } from './linked-accounts.service';
 import { AuthStatusResponse } from './auth-status.model';
+import { OAuthStateService } from './oauth-state.service';
 import { LeetifyClient } from '../players/clients/leetify.client';
+import { SteamFaceitService } from './steam-faceit.service';
 
 /**
  * "Bejelentkezés FACEIT-tel / Steammel" (AuthModule).
@@ -46,12 +48,16 @@ export class AuthController {
     private readonly steamAuth: SteamAuthService,
     private readonly linkedAccounts: LinkedAccountsService,
     private readonly leetifyClient: LeetifyClient,
+    private readonly loginAttempts: OAuthStateService,
+    private readonly steamFaceit: SteamFaceitService,
   ) {}
 
   /** GET /auth/status - polled by the Account tab after a login click; never returns tokens (see LinkedAccountsService.getPublicView()). */
   @Get('status')
-  getStatus(): AuthStatusResponse {
+  async getStatus(): Promise<AuthStatusResponse> {
+    await this.steamFaceit.refresh();
     return {
+      capabilities: { steam: true, faceit: this.faceitOAuth.isConfigured },
       faceit: this.linkedAccounts.getPublicView('faceit'),
       steam: this.linkedAccounts.getPublicView('steam'),
     };
@@ -86,13 +92,20 @@ export class AuthController {
 
   /** DELETE /auth/:provider - "Unlink" button. Fully deletes the row (tokens included), not just a UI-side hide. */
   @Delete(':provider')
-  unlink(@Param('provider') provider: string): AuthStatusResponse {
+  unlink(@Param('provider') provider: string): Promise<AuthStatusResponse> {
     if (provider !== 'faceit' && provider !== 'steam') {
       throw new BadRequestException(`Unknown provider "${provider}" - expected "faceit" or "steam".`);
     }
     if (provider === 'faceit') this.faceitOAuth.unlink();
     else this.steamAuth.unlink();
     return this.getStatus();
+  }
+
+  @Delete(':provider/pending')
+  cancelLogin(@Param('provider') provider: string) {
+    if (provider !== 'faceit' && provider !== 'steam') throw new BadRequestException('Unknown provider.');
+    this.loginAttempts.cancel(provider);
+    return { cancelled: true };
   }
 
   // -------------------------------------------------------------------
@@ -119,6 +132,7 @@ export class AuthController {
     @Query('error') error?: string,
   ): Promise<string> {
     if (error) {
+      if (state) this.loginAttempts.consume('faceit', state);
       return this.renderCallbackPage(false, `FACEIT reported: ${error}`);
     }
     if (!code || !state) {
@@ -128,8 +142,8 @@ export class AuthController {
       await this.faceitOAuth.handleCallback(code, state);
       return this.renderCallbackPage(true, 'FACEIT account linked successfully.');
     } catch (err: any) {
-      this.logger.warn(`FACEIT OAuth callback failed: ${err?.message || err}`);
-      return this.renderCallbackPage(false, err?.message || 'Something went wrong linking your FACEIT account.');
+      this.logger.warn('FACEIT OAuth callback failed.');
+      return this.renderCallbackPage(false, 'FACEIT linking failed or expired. Check the OAuth configuration and retry from the app.');
     }
   }
 
@@ -151,8 +165,8 @@ export class AuthController {
       await this.steamAuth.handleCallback(query);
       return this.renderCallbackPage(true, 'Steam account linked successfully.');
     } catch (err: any) {
-      this.logger.warn(`Steam OpenID callback failed: ${err?.message || err}`);
-      return this.renderCallbackPage(false, err?.message || 'Something went wrong linking your Steam account.');
+      this.logger.warn('Steam OpenID callback failed.');
+      return this.renderCallbackPage(false, 'Steam linking was cancelled, expired or rejected. Retry from the app.');
     }
   }
 

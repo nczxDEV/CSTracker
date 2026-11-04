@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "demo-analyzer",
+  "description": "Local demo replay window events and native file picker.",
+  "windows": ["demo-analyzer"],
+  "permissions": ["core:default", "dialog:default"]
+}

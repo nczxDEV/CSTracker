@@ -75,12 +75,14 @@
               <div class="fmh-row-title">vs ${escapeHtml(opponentLabel)}</div>
               <div class="fmh-row-sub">${escapeHtml(competitionLabel)} &middot; ${whenLabel}</div>
             </div>
-            <div class="fmh-row-score">${scoreLabel}</div>
+            <div class="fmh-row-score"><div>${scoreLabel}</div><small title="Rating supplied by FACEIT; unavailable values are never estimated">Rating ${Number.isFinite(m.faceitRating) ? m.faceitRating.toFixed(2) : '—'}</small></div>
           </div>`;
       })
       .join("");
 
+    const ratings = matches.map(m=>m.faceitRating).filter(Number.isFinite);
     root.innerHTML = `
+      <div class="ps-card"><h2>FACEIT Rating <span class="badge-optional">Recent matches</span></h2><div style="font-size:28px;color:#ffb76b;font-weight:700">${ratings.length ? (ratings.reduce((a,b)=>a+b,0)/ratings.length).toFixed(2) : 'N/A'}</div><p class="hint">${ratings.length ? `Average of ${ratings.length} API-provided ratings.` : 'FACEIT did not provide ratings for these matches.'}</p></div>
       <div class="ps-card">
         <h2>FACEIT Match History <span class="badge-optional">Last ${matches.length} &middot; GSI-free</span></h2>
         <p class="hint" style="margin-top:0;">Click a match to see the full breakdown (both rosters, K/D/A, ADR/HS%, MVP) in a separate window.</p>

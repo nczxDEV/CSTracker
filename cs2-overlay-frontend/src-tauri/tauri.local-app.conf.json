@@ -1,0 +1,12 @@
+{
+  "productName": "CS Tracker",
+  "identifier": "com.cstracker.app",
+  "bundle": {
+    "createUpdaterArtifacts": true
+  },
+  "plugins": {
+    "updater": {
+      "active": true
+    }
+  }
+}

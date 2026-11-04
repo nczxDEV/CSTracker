@@ -30,6 +30,23 @@
   };
 
   let pollTimer = null;
+  let lastSteamId = null;
+  let pendingProvider = null;
+  const cancelButton = document.createElement('button');
+  cancelButton.textContent = 'Cancel sign-in'; cancelButton.hidden = true;
+  els.loginStatus?.after(cancelButton);
+  cancelButton.addEventListener('click', async () => {
+    const provider = pendingProvider;
+    clearInterval(pollTimer); pollTimer = null; pendingProvider = null;
+    cancelButton.hidden = true;
+    try {
+      if (provider) {
+        const res = await fetch(`${ACCOUNT_BACKEND_URL}/auth/${provider}/pending`, { method:'DELETE' });
+        if (!res.ok) throw new Error();
+      }
+      els.loginStatus.textContent = 'Sign-in cancelled. Close the browser login tab.';
+    } catch { els.loginStatus.textContent = 'Stopped waiting; backend unavailable. Close the browser login tab.'; }
+  });
 
   /** Opens a URL in the user's SYSTEM DEFAULT BROWSER - never inside this app's own webview, the standard, secure pattern for OAuth/OpenID login. Falls back to a plain browser new-tab when previewing outside Tauri. */
   async function openInSystemBrowser(url) {
@@ -44,8 +61,9 @@
         return;
       }
     } catch (err) {
-      console.warn("Failed to open URL via the Tauri opener plugin:", err);
+      throw new Error('Could not open the system browser. Please retry.');
     }
+    if (window.__TAURI__) throw new Error('System browser opener is unavailable. Restart the app.');
     window.open(url, "_blank");
   }
 
@@ -62,14 +80,17 @@
   }
 
   function renderAvatar(el, name, avatarUrl) {
-    if (avatarUrl) {
-      el.innerHTML = `<img src="${escapeHtml(avatarUrl)}" alt="" />`;
+    if (avatarUrl && /^https:\/\//i.test(avatarUrl)) {
+      const img=document.createElement('img');img.src=avatarUrl;img.alt='Profile photo';img.referrerPolicy='no-referrer';
+      img.onerror=()=>{el.textContent=initials(name);};el.replaceChildren(img);
     } else {
       el.textContent = initials(name);
     }
   }
 
   function renderStatus(status) {
+    window.CSTrackerAccountStatus=status;
+    window.dispatchEvent(new CustomEvent('cstracker-account-status', { detail: status }));
     const faceit = status.faceit;
     const steam = status.steam;
     const anyLinked = Boolean(faceit || steam);
@@ -84,7 +105,7 @@
     if (anyLinked) {
       els.avatarInitials.textContent = initials(primaryName);
       if (primaryAvatar) {
-        els.avatarBtn.style.backgroundImage = `url('${primaryAvatar}')`;
+        els.avatarBtn.style.backgroundImage = `url(${JSON.stringify(primaryAvatar)})`;
         els.avatarBtn.style.backgroundSize = "cover";
         els.avatarInitials.style.display = "none";
       } else {
@@ -100,10 +121,10 @@
     }
 
     renderAvatar(els.headerAvatar, primaryName, primaryAvatar);
-    els.headerName.textContent = anyLinked ? primaryName || "Signed in" : "Not signed in";
+    els.headerName.textContent = anyLinked ? primaryName || "Your connected profile" : "Make it your HQ.";
     els.headerSub.textContent = anyLinked
       ? [faceit ? "FACEIT linked" : null, steam ? "Steam linked" : null].filter(Boolean).join(" \u00b7 ")
-      : "Link a FACEIT or Steam account below.";
+      : "Connect your FACEIT identity. Your progress follows.";
 
     // FACEIT row
     if (faceit) {
@@ -112,10 +133,12 @@
       const detail = [level ? `Level ${level}` : null, elo ? `${elo} ELO` : null].filter(Boolean).join(" \u00b7 ");
       els.faceitName.textContent = detail ? `${faceit.displayName} \u00b7 ${detail}` : faceit.displayName || "Linked";
       els.faceitLoginBtn.style.display = "none";
-      els.faceitUnlinkBtn.style.display = "";
+      els.faceitUnlinkBtn.style.display = faceit.extra?.identitySource === 'steam-data-api' ? 'none' : '';
+      if (faceit.extra?.identitySource === 'steam-data-api') els.faceitName.textContent += ' · Found via Steam';
     } else {
       els.faceitName.textContent = "Not connected";
-      els.faceitLoginBtn.style.display = "";
+      if (status.capabilities?.faceit === false) els.faceitName.textContent = steam ? 'No FACEIT profile found yet. Check your FACEIT Data API key in Setup & GSI.' : 'Connect Steam to find your FACEIT profile automatically.';
+      els.faceitLoginBtn.style.display = status.capabilities?.faceit === false ? 'none' : '';
       els.faceitUnlinkBtn.style.display = "none";
     }
 
@@ -134,27 +157,29 @@
     // (Leetify identifies players by SteamID64).
     if (steam) {
       els.leetifySection.style.display = "";
-      loadLeetifyStats();
+      if (lastSteamId !== steam.providerUserId) loadLeetifyStats();
     } else {
       els.leetifySection.style.display = "none";
     }
+    lastSteamId = steam?.providerUserId || null;
   }
 
   async function loadStatus() {
     try {
-      const res = await fetch(`${ACCOUNT_BACKEND_URL}/auth/status`);
+      const res = await fetch(`${ACCOUNT_BACKEND_URL}/auth/status`, {signal:AbortSignal.timeout(1500)});
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const status = await res.json();
       renderStatus(status);
       return status;
     } catch (err) {
-      console.warn("Failed to load auth status:", err);
+      els.loginStatus.textContent = 'Backend unavailable. Account connection could not be checked.';
       return null;
     }
   }
 
   /** Starts short-lived polling right after a "Login with ..." click - stops automatically once the target provider shows up as linked, or after a generous timeout (the user may have abandoned the browser tab). */
   function startPollingForLinkChange(provider) {
+    pendingProvider = provider; cancelButton.hidden = false;
     if (pollTimer) clearInterval(pollTimer);
     let elapsedMs = 0;
     const intervalMs = 1500;
@@ -162,8 +187,10 @@
     pollTimer = setInterval(async () => {
       elapsedMs += intervalMs;
       const status = await loadStatus();
+      if (pendingProvider !== provider) return;
       const linked = provider === "faceit" ? status?.faceit : status?.steam;
       if (linked) {
+        pendingProvider = null; cancelButton.hidden = true;
         clearInterval(pollTimer);
         pollTimer = null;
         els.loginStatus.textContent = `${provider === "faceit" ? "FACEIT" : "Steam"} account linked \u2713`;
@@ -173,27 +200,31 @@
           els.loginStatus.classList.remove("saved");
         }, 3000);
       } else if (elapsedMs >= timeoutMs) {
+        pendingProvider = null; cancelButton.hidden = true;
+        els.loginStatus.textContent = 'Sign-in did not finish. Check the browser result, then retry.';
         clearInterval(pollTimer);
         pollTimer = null;
       }
     }, intervalMs);
   }
 
-  els.faceitLoginBtn?.addEventListener("click", async () => {
-    els.loginStatus.textContent = "Opening FACEIT login in your browser...";
-    els.loginStatus.classList.remove("saved");
-    await openInSystemBrowser(`${ACCOUNT_BACKEND_URL}/auth/faceit/login`);
-    startPollingForLinkChange("faceit");
-  });
-
-  els.steamLoginBtn?.addEventListener("click", async () => {
-    els.loginStatus.textContent = "Opening Steam login in your browser...";
-    els.loginStatus.classList.remove("saved");
-    await openInSystemBrowser(`${ACCOUNT_BACKEND_URL}/auth/steam/login`);
-    startPollingForLinkChange("steam");
-  });
+  async function signIn(provider) {
+    try {
+      const status = await loadStatus();
+      if (!status) return;
+      if (status.capabilities?.[provider] === false) throw new Error('FACEIT OAuth client credentials and a registered callback must be configured by the app developer. You can still look up players using the Data API.');
+      if (status[provider]) { els.loginStatus.textContent = 'Already linked. Unlink first to switch accounts.'; return; }
+      await openInSystemBrowser(`${ACCOUNT_BACKEND_URL}/auth/${provider}/login`);
+      els.loginStatus.textContent = 'Complete sign-in in your browser. Waiting for the callback…';
+      startPollingForLinkChange(provider);
+    } catch (error) { els.loginStatus.textContent = error.message; }
+  }
+  els.faceitLoginBtn?.addEventListener('click', () => signIn('faceit'));
+  els.steamLoginBtn?.addEventListener('click', () => signIn('steam'));
+  window.addEventListener('focus', loadStatus);
 
   async function unlink(provider) {
+    if (pendingProvider === provider) cancelButton.click();
     try {
       const res = await fetch(`${ACCOUNT_BACKEND_URL}/auth/${provider}`, { method: "DELETE" });
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -205,6 +236,7 @@
   }
   els.faceitUnlinkBtn?.addEventListener("click", () => unlink("faceit"));
   els.steamUnlinkBtn?.addEventListener("click", () => unlink("steam"));
+  document.getElementById('account-api-settings')?.addEventListener('click',()=>window.activateTab?.('tab-setup'));
 
   // ---------------------------------------------------------------------
   // "My Leetify Stats" - see the backend's leetify-profile.model.ts for
@@ -327,5 +359,13 @@
     loadStatus();
   });
 
-  loadStatus();
+  // The local sidecar can start after the WebView. Retry only this bounded
+  // startup check; focus and explicit login still refresh independently.
+  window.CSTrackerAccountReady=(async()=>{
+    for(let attempt=0;attempt<4;attempt++){
+      const status=await loadStatus();if(status)return status;
+      if(attempt<3)await new Promise(resolve=>setTimeout(resolve,300));
+    }
+    return null;
+  })();
 })();

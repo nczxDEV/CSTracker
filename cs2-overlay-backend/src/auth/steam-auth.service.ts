@@ -98,6 +98,14 @@ export class SteamAuthService {
       throw new Error('Invalid or expired login attempt (state mismatch) - please try logging in again.');
     }
 
+    if (query['openid.mode'] === 'cancel') throw new Error('Steam sign-in cancelled.');
+    if (query['openid.mode'] !== 'id_res' ||
+        query['openid.op_endpoint'] !== STEAM_OPENID_ENDPOINT ||
+        query['openid.identity'] !== query['openid.claimed_id'] ||
+        query['openid.return_to'] !== `${this.callbackBaseUrl}?state=${encodeURIComponent(ourState)}`) {
+      throw new Error('Steam callback does not match this login attempt.');
+    }
+
     const claimedId = query['openid.claimed_id'];
     if (!claimedId || !claimedId.startsWith(STEAM_CLAIMED_ID_PREFIX)) {
       throw new Error("Steam's response did not include a valid claimed identity.");

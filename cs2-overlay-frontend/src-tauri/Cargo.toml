@@ -1,8 +1,12 @@
 [package]
 name = "cs2-overlay-frontend"
-version = "0.3.0"
+version = "0.4.7"
 description = "CS Tracker desktop client - Control Panel with an inline CS2 stats tracker"
 edition = "2021"
+
+[features]
+# Installed debug previews need the same backend lifecycle as release builds.
+bundled-backend = []
 
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
@@ -41,6 +45,8 @@ tauri-plugin-dialog = "2"
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
+awpy = "3.1.1"
+reqwest = { version = "0.13", default-features = false, features = ["json", "rustls"] }
 
 # NOTE: this project intentionally has NO [lib] section. The original
 # scaffold declared one (`cs2_overlay_frontend_lib`, staticlib/cdylib/rlib)

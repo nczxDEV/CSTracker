@@ -6,6 +6,7 @@ import { LinkedAccountsService } from './linked-accounts.service';
 import { FaceitOAuthService } from './faceit-oauth.service';
 import { SteamAuthService } from './steam-auth.service';
 import { PlayersModule } from '../players/players.module';
+import { SteamFaceitService } from './steam-faceit.service';
 
 /**
  * "Bejelentkezés FACEIT-tel / Steammel" - see linked-account.model.ts for
@@ -19,7 +20,7 @@ import { PlayersModule } from '../players/players.module';
 @Module({
   imports: [HttpModule.register({ timeout: 8000 }), PlayersModule],
   controllers: [AuthController],
-  providers: [OAuthStateService, LinkedAccountsService, FaceitOAuthService, SteamAuthService],
+  providers: [OAuthStateService, LinkedAccountsService, FaceitOAuthService, SteamAuthService, SteamFaceitService],
   exports: [LinkedAccountsService],
   // NOTE: `LeetifyClient` (used by AuthController's "My Leetify Stats"
   // endpoint) is injected directly from `PlayersModule` (re-exported

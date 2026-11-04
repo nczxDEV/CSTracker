@@ -1,0 +1,53 @@
+#onboarding-overlay.intro-active{background:#a9cbe9}
+.intro-active .onb-wizard{width:min(1200px,100%);max-width:100%;max-height:100%;border:0;border-radius:16px;background:#a9cbe9;box-shadow:none}
+.intro-active .onb-top{display:none}
+.intro-active .onb-step[data-onb-step="0"]{padding:0}
+.glacial-intro{position:relative;overflow:hidden;background:linear-gradient(155deg,#e1edf7,#a9cbe9 54%,#76a7d4);color:#122c4b;font-family:Inter,'Segoe UI',sans-serif}
+.glacial-intro header{position:relative;z-index:3;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:26px 32px}
+.glacial-intro header strong{font-size:13px;letter-spacing:2px;font-weight:700}
+.glacial-intro header>div{display:flex;gap:10px;flex-wrap:wrap}
+.glacial-intro button{background:#eaf5ff;border:1px solid #91adc8;color:#153653;border-radius:24px;padding:11px 17px;font:650 13px/1.4 Inter,'Segoe UI',sans-serif;cursor:pointer;clip-path:none;text-transform:none;letter-spacing:0}
+.glacial-intro button:hover{background:#fff}.glacial-intro button:focus-visible{outline:3px solid #145ea5;outline-offset:3px}
+.glacial-intro .onb-skip-setup-btn{background:transparent;border-color:transparent}
+.glacial-scene{position:relative;height:450px;perspective:900px}
+.glacial-horizon{position:absolute;inset:36% -20% auto;height:260px;border-radius:50%;border-top:18px solid #b9def7;box-shadow:0 -12px 0 #afd5f2,0 -24px 0 #bad9ef,0 -34px 0 #cde3f5;transform:rotate(-6deg);background:linear-gradient(#85b6dc55,transparent)}
+.glacial-ground{position:absolute;inset:24% -35% -35%;transform:rotateX(66deg);background-image:linear-gradient(#6594c344 1px,transparent 1px),linear-gradient(90deg,#6594c344 1px,transparent 1px);background-size:90px 90px;mask-image:linear-gradient(transparent,#000 50%,transparent)}
+.glacial-pedestal{position:absolute;width:260px;height:74px;left:66%;top:47%;transform:translate(-50%,-50%) rotateX(58deg);border-radius:20px;background:linear-gradient(100deg,#cae8ff,#f4fbff);box-shadow:0 18px 0 #94bbdf,0 37px 40px #346b9966}
+#glacial-logo{position:absolute;left:66%;top:25%;width:230px;height:230px;object-fit:contain;transform:translate(-50%,-50%) rotateY(-24deg) rotateX(10deg);filter:drop-shadow(0 6px 3px #234c6b33)}
+.glacial-copy{position:absolute;left:32px;bottom:38px;max-width:55%}
+.glacial-copy>span{font-size:12px;font-weight:650;letter-spacing:2px}
+.glacial-intro .glacial-copy h1{font:500 clamp(32px,4.8vw,54px)/1.05 Inter,'Segoe UI',sans-serif;letter-spacing:-2px;color:#122c4b;margin:16px 0}
+.glacial-copy p{font-size:14px;font-weight:600;color:#264769;line-height:1.6;margin:0;max-width:370px}
+.glacial-intro footer{position:relative;z-index:3;display:flex;align-items:center;gap:18px;padding:16px 32px 28px;font-size:12px;font-weight:650;color:#264769}
+@media(max-width:650px){.glacial-intro header{padding:20px;flex-wrap:wrap}.glacial-intro header>div{margin-left:auto}.glacial-scene{height:470px}#glacial-logo{left:50%;top:22%;width:190px;height:190px}.glacial-pedestal{left:50%;top:44%}.glacial-copy{max-width:calc(100% - 48px);left:24px;bottom:20px}.glacial-intro footer{padding:18px 24px;flex-wrap:wrap}}
+
+/* One full-window stage shared by every setup step. */
+#onboarding-overlay,#onboarding-overlay.intro-active{display:block;background:linear-gradient(155deg,#e1edf7,#a9cbe9 54%,#76a7d4);color:#122c4b;overflow:hidden;font-family:Inter,'Segoe UI',sans-serif}
+#onboarding-overlay>.glacial-scene{position:absolute;inset:0;height:100%;pointer-events:none}
+#onboarding-overlay .glacial-header{position:absolute;top:0;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:22px 32px;color:#122c4b}
+.glacial-header strong{font-size:13px;letter-spacing:2px}.glacial-header>div{display:flex;gap:10px}
+.glacial-header button{font:650 13px Inter,'Segoe UI',sans-serif;padding:12px 18px;border:1px solid #91adc8;border-radius:24px;background:#eaf5ff;color:#153653;cursor:pointer;clip-path:none}
+.glacial-header button[hidden]{display:none}
+#onboarding-overlay .onb-wizard{position:relative;z-index:2;width:100%;height:100%;max-width:none;max-height:none;box-sizing:border-box;padding:100px 40px 32px;background:transparent;border:0;border-radius:0;box-shadow:none;overflow-y:auto;pointer-events:none}
+#onboarding-overlay .onb-wizard>*{pointer-events:auto}
+#onboarding-overlay #glacial-logo{left:76%;top:40%;width:clamp(180px,23vw,300px);height:clamp(180px,23vw,300px)}
+#onboarding-overlay .glacial-pedestal{left:76%;top:59%;width:280px}
+#onboarding-overlay .onb-top{width:min(590px,54%);padding:0 0 20px;box-sizing:border-box}
+#onboarding-overlay .onb-brand{color:#25466b}
+#onboarding-overlay .onb-step:not([data-onb-step="0"]){width:min(590px,54%);box-sizing:border-box;padding:24px;background:#e7f2fcf2;border:1px solid #a3bfd8;border-radius:16px;color:#122c4b;box-shadow:0 18px 45px #365c7b18}
+#onboarding-overlay .onb-step h1{color:#122c4b}
+#onboarding-overlay .onb-lead,#onboarding-overlay .onb-hint,#onboarding-overlay label,#onboarding-overlay .onb-status-line{color:#294a6a;font-weight:550}
+#onboarding-overlay input{background:#f6fbff;color:#153653;border:1px solid #96b2cd;border-radius:8px}
+#onboarding-overlay .onb-btn{font-weight:650;color:#153653;border:1px solid #91adc8;border-radius:10px;background:#d6e9fa;clip-path:none}
+#onboarding-overlay .onb-btn-primary{background:#205da0;color:white;border-color:#205da0}
+#onboarding-overlay .onb-btn:disabled{opacity:.5}
+#onboarding-overlay .glacial-intro{position:static;overflow:visible;background:none}
+#onboarding-overlay .glacial-copy{left:40px;bottom:18%;max-width:55%;pointer-events:auto}
+#onboarding-overlay .glacial-copy .glacial-setup-primary{display:inline-flex;align-items:center;justify-content:center;margin-top:26px;min-height:52px;padding:0 30px;border:1px solid #183e66;border-radius:12px;background:#153b63;color:#f4faff;font:750 16px/1.2 Inter,'Segoe UI',sans-serif;letter-spacing:.2px;box-shadow:0 8px 22px #173f6226;cursor:pointer;clip-path:none;transition:background .18s ease,box-shadow .18s ease}
+#onboarding-overlay .glacial-copy .glacial-setup-primary:hover{background:#1e4c7c;box-shadow:0 10px 26px #173f6238}
+#onboarding-overlay .glacial-setup-primary[hidden]{display:none}
+#onboarding-overlay .glacial-header .onb-skip-setup-btn{background:transparent;border-color:transparent;font-size:12px;font-weight:600;padding:9px 10px;color:#294b6a}
+#onboarding-overlay .glacial-header .onb-skip-setup-btn:hover{background:#eaf5ff55}
+#onboarding-overlay .glacial-intro footer{position:absolute;left:8px;bottom:16px}
+#onboarding-overlay button:focus-visible,#onboarding-overlay input:focus-visible{outline:3px solid #145ea5;outline-offset:3px}
+@media(max-width:650px){#onboarding-overlay .glacial-header{padding:16px;flex-wrap:wrap}#onboarding-overlay .onb-wizard{padding:300px 20px 30px}#onboarding-overlay .onb-top,#onboarding-overlay .onb-step:not([data-onb-step="0"]){width:100%}#onboarding-overlay #glacial-logo{left:50%;top:170px;width:150px;height:150px}#onboarding-overlay .glacial-pedestal{left:50%;top:260px;width:210px}#onboarding-overlay .glacial-copy{position:relative;left:0;bottom:auto;max-width:100%;padding-top:30px}#onboarding-overlay .glacial-intro footer{position:relative;left:0;bottom:auto;padding:30px 0}.glacial-header button{font-size:12px;padding:10px 12px}}

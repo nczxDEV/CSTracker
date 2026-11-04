@@ -1,0 +1,18 @@
+/* Minimal command bar; the existing logo header and account avatar stay above it. */
+#launcher-nav.command-nav{align-items:center;justify-content:center;gap:0;padding:8px 12px;flex-shrink:0}
+#launcher-nav .command-menu{position:relative;flex-shrink:0}
+#launcher-menu-toggle{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:6px;color:var(--text-primary);font-family:var(--font-body);font-size:12px;cursor:pointer;list-style:none}
+#launcher-menu-toggle::-webkit-details-marker{display:none}
+#launcher-menu-toggle:hover,#launcher-menu[open]>summary{background:var(--accent-blue-dim)}
+#launcher-nav .command-menu-pages{position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;gap:3px;width:230px;max-width:calc(100vw - 64px);max-height:min(65vh,480px);overflow-y:auto;padding:10px;border:1px solid var(--border-subtle);border-radius:10px;background:var(--bg-panel);box-shadow:0 12px 32px rgba(0,0,0,.35);box-sizing:border-box}
+#launcher-menu:not([open])>.command-menu-pages{display:none}
+#launcher-nav .command-menu-label{font-size:10px;letter-spacing:1.5px;color:var(--text-muted);padding:7px 10px 9px}
+#launcher-nav .nav-tab{flex:0 0 auto;clip-path:none;transform:none;box-shadow:none;letter-spacing:0;background:transparent;border-radius:6px;padding:10px 12px;color:var(--text-secondary)}
+#launcher-nav .nav-tab:hover{background:var(--accent-blue-dim);color:var(--text-primary)}
+#launcher-nav .nav-tab.active{background:transparent;box-shadow:none;color:var(--text-primary)}
+#launcher-nav .nav-tab.active::after{background:var(--accent-blue);box-shadow:none;left:12px;right:12px}
+#launcher-nav .command-menu-pages .nav-tab{justify-content:flex-start;text-align:left;gap:10px;width:100%;font-size:12px}
+#launcher-nav .command-menu-pages .nav-tab.active{background:var(--accent-blue-dim)}
+#launcher-nav .command-menu-pages .nav-tab::after{display:none}
+#launcher-nav .command-page-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+#launcher-nav :is(button,summary):focus-visible{outline:2px solid var(--accent-blue);outline-offset:2px}

@@ -1,0 +1,2 @@
+/* The launcher entry spans the dashboard; replay has its own window. */
+#tab-demo-analyzer.active { display: block; column-count: 1; }

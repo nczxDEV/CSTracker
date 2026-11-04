@@ -1,0 +1,17 @@
+{
+  "productName": "CS Tracker Demo Analyzer Preview",
+  "version": "0.3.13",
+  "identifier": "com.cstracker.demo-preview",
+  "build": {
+    "features": ["bundled-backend"]
+  },
+  "bundle": {
+    "createUpdaterArtifacts": false,
+    "targets": ["nsis"]
+  },
+  "plugins": {
+    "updater": {
+      "active": false
+    }
+  }
+}

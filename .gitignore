@@ -18,3 +18,9 @@ cs2-overlay-frontend/src-tauri/binaries/
 .DS_Store
 Thumbs.db
 *.log
+
+# Local release tooling and private signing material
+.release-tools/
+*.key
+*.key.pub
+cs2-overlay-backend/dist-tsc/

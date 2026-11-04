@@ -20,6 +20,7 @@ name: Release
 # (releaseDraft: true below) so you can review/edit the release notes
 # before publishing it live to end users.
 on:
+  workflow_dispatch:
   push:
     tags:
       - "v*"
@@ -59,6 +60,16 @@ jobs:
         working-directory: cs2-overlay-frontend
         run: npm install
 
+      - name: Read release version and notes
+        id: version
+        shell: pwsh
+        run: |
+          $version = (Get-Content cs2-overlay-frontend/package.json | ConvertFrom-Json).version
+          "tag=v$version" >> $env:GITHUB_OUTPUT
+          "body<<RELEASE_NOTES_END" >> $env:GITHUB_OUTPUT
+          Get-Content "RELEASE_NOTES_$version.md" >> $env:GITHUB_OUTPUT
+          "RELEASE_NOTES_END" >> $env:GITHUB_OUTPUT
+
       - name: Build, sign & publish the release
         uses: tauri-apps/tauri-action@v0
         env:
@@ -73,8 +84,9 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         with:
           projectPath: cs2-overlay-frontend
-          tagName: ${{ github.ref_name }}
-          releaseName: "CS Tracker ${{ github.ref_name }}"
-          releaseBody: "See CHANGELOG / commit history for details."
+          tagName: ${{ steps.version.outputs.tag }}
+          releaseName: "CS Tracker ${{ steps.version.outputs.tag }}"
+          releaseBody: ${{ steps.version.outputs.body }}
+          args: --bundles nsis --config src-tauri/tauri.local-app.conf.json
           releaseDraft: true
           prerelease: false

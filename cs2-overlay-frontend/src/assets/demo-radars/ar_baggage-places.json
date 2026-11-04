@@ -1,0 +1,184 @@
+[
+  {
+    "Name": "CTSpawn",
+    "EnglishName": "CT Start",
+    "MinBound": {
+      "X": -591,
+      "Y": -1304,
+      "Z": 90.461365
+    },
+    "MaxBound": {
+      "X": 536,
+      "Y": -800,
+      "Z": 196.96106
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -568,
+      "Y": 800,
+      "Z": 90.461365
+    },
+    "MaxBound": {
+      "X": 559,
+      "Y": 1272,
+      "Z": 196.96106
+    }
+  },
+  {
+    "Name": "MidCarousel",
+    "EnglishName": "Mid Carousel",
+    "MinBound": {
+      "X": -512,
+      "Y": -776,
+      "Z": -149.56995
+    },
+    "MaxBound": {
+      "X": 472,
+      "Y": 784,
+      "Z": 282.43005
+    }
+  },
+  {
+    "Name": "CTCorridorDown",
+    "EnglishName": "CT Corridor Down",
+    "MinBound": {
+      "X": -992,
+      "Y": -775,
+      "Z": -149.56993
+    },
+    "MaxBound": {
+      "X": -491,
+      "Y": 48,
+      "Z": 194.44807
+    }
+  },
+  {
+    "Name": "TCorridorUp",
+    "EnglishName": "T Corridor Up",
+    "MinBound": {
+      "X": -856,
+      "Y": -50,
+      "Z": 98.44556
+    },
+    "MaxBound": {
+      "X": -432,
+      "Y": 792,
+      "Z": 346.43005
+    }
+  },
+  {
+    "Name": "TCorridorDown",
+    "EnglishName": "T Corridor Down",
+    "MinBound": {
+      "X": 434,
+      "Y": -48,
+      "Z": -149.56996
+    },
+    "MaxBound": {
+      "X": 960,
+      "Y": 784,
+      "Z": 218.43004
+    }
+  },
+  {
+    "Name": "CTCorridorUp",
+    "EnglishName": "CT Corridor Up",
+    "MinBound": {
+      "X": 408,
+      "Y": -792,
+      "Z": 90.44557
+    },
+    "MaxBound": {
+      "X": 824,
+      "Y": 50.00003,
+      "Z": 330.43005
+    }
+  },
+  {
+    "Name": "UpperConveyor",
+    "EnglishName": "Upper Conveyor",
+    "MinBound": {
+      "X": -552,
+      "Y": -424.0016,
+      "Z": 86.51196
+    },
+    "MaxBound": {
+      "X": 509.00003,
+      "Y": 400,
+      "Z": 314.43005
+    }
+  },
+  {
+    "Name": "UpperCatwalk",
+    "EnglishName": "Upper Catwalk",
+    "MinBound": {
+      "X": -667.99976,
+      "Y": 155.99979,
+      "Z": 321.43005
+    },
+    "MaxBound": {
+      "X": -347.9999,
+      "Y": 227.99988,
+      "Z": 474.43005
+    }
+  },
+  {
+    "Name": "UpperCatwalk",
+    "EnglishName": "Upper Catwalk",
+    "MinBound": {
+      "X": -533,
+      "Y": -36,
+      "Z": 321.43005
+    },
+    "MaxBound": {
+      "X": 498,
+      "Y": 36,
+      "Z": 474.43005
+    }
+  },
+  {
+    "Name": "UpperCatwalk",
+    "EnglishName": "Upper Catwalk",
+    "MinBound": {
+      "X": 312.00003,
+      "Y": -231.99991,
+      "Z": 321.43005
+    },
+    "MaxBound": {
+      "X": 631.9999,
+      "Y": -159.99982,
+      "Z": 474.43005
+    }
+  },
+  {
+    "Name": "UpperCatwalk",
+    "EnglishName": "Upper Catwalk",
+    "MinBound": {
+      "X": -561.9999,
+      "Y": -326.00006,
+      "Z": 321.43005
+    },
+    "MaxBound": {
+      "X": -429.99985,
+      "Y": -253.99994,
+      "Z": 474.43005
+    }
+  },
+  {
+    "Name": "UpperCatwalk",
+    "EnglishName": "Upper Catwalk",
+    "MinBound": {
+      "X": 397.99988,
+      "Y": 247.99997,
+      "Z": 321.43005
+    },
+    "MaxBound": {
+      "X": 529.9999,
+      "Y": 320.0001,
+      "Z": 474.43005
+    }
+  }
+]

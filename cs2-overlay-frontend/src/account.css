@@ -1,6 +1,6 @@
 /* ---------------------------------------------------------------------- */
 /* "Bejelentkezés FACEIT-tel / Steammel" - Account tab + header avatar     */
-/* button (see account.js). Reuses the shared --bg-*/--accent-* variables */
+/* button (see account.js). Reuses the shared background/accent variables. */
 /* and .launcher-section/.ps-card visual language already established by  */
 /* styles.css/launcher.css - only the classes specific to this feature    */
 /* are defined here.                                                      */
@@ -209,3 +209,31 @@
   line-height: 0;
 }
 .leetify-account-attribution img { height: 28px; display: block; }
+
+/* Player identity: one quiet connection surface, with optional stats below. */
+#tab-account.active{display:block;column-count:1;column-width:auto;flex:0 0 auto;overflow:visible}
+.account-identity-panel{max-width:760px;margin:24px auto;padding:32px;border:1px solid #2b3547;border-radius:16px;background:#10141c;color:#edf2fa;box-sizing:border-box;font-family:Inter,'Segoe UI',sans-serif}
+.account-kicker{font-size:11px;letter-spacing:2px;color:#8da6cc;margin-bottom:30px}
+.account-identity-panel .account-header-card{gap:20px;margin-bottom:30px}
+.account-identity-panel .account-header-avatar{width:72px;height:72px;background:#1a2638;border-color:#538eed;font-size:25px}
+.account-identity-panel .account-header-name{font:600 28px/1.2 Inter,'Segoe UI',sans-serif;margin:0 0 9px;letter-spacing:-.6px;overflow-wrap:anywhere}
+.account-identity-panel .account-header-sub{font-size:13px;color:#a9b5c9;line-height:1.6}
+.account-identity-panel .linked-account-row{padding:20px;gap:18px;margin:0;border-radius:10px;flex-wrap:wrap}
+.account-identity-panel #linked-account-row-faceit{background:linear-gradient(110deg,#1b2738,#171d29);border:1px solid #344766}
+.account-identity-panel #linked-account-row-steam{padding:24px 0;background:none;border:0}
+.account-identity-panel .linked-account-provider{color:#c5d5ef;font-size:11px;letter-spacing:1.6px}
+.account-identity-panel .linked-account-name{font-size:13px;font-weight:400;white-space:normal;overflow:visible;color:#a9b5c9;margin-top:5px;overflow-wrap:anywhere}
+.account-identity-panel .linked-account-main{min-width:180px}
+.account-identity-panel .account-optional{color:#a9b5c9;font-size:12px;line-height:1.6;margin-top:4px}
+.account-identity-panel button{border-radius:7px;font:600 12px/1.4 Inter,'Segoe UI',sans-serif;padding:11px 15px;clip-path:none;letter-spacing:0;text-transform:none;white-space:normal}
+.account-identity-panel #faceit-login-btn{background:#ee702f;color:#10141c;border-color:#ee702f;box-shadow:none}
+.account-identity-panel #faceit-login-btn:hover{background:#ff8d4e}
+.account-identity-footer{border-top:1px solid #2b3547;padding-top:16px;display:flex;align-items:center;gap:18px;justify-content:space-between;color:#a0adc1;font-size:12px;line-height:1.6}
+.account-identity-footer span{max-width:470px}
+.account-identity-panel #account-api-settings{flex-shrink:0;background:none;border-color:transparent;color:#b4c7e8}
+.account-identity-panel #account-login-status{white-space:normal;line-height:1.7;overflow-wrap:anywhere;margin-top:14px}
+.account-stats{max-width:760px;margin:16px auto 32px;border:1px solid #2b3547;border-radius:12px;background:#10141c}
+.account-stats>summary{padding:20px;color:#dce7f7;cursor:pointer;font-size:14px}
+.account-stats>summary span{float:right;font-size:12px;color:#a9b5c9}
+.account-stats-body{padding:0 20px 20px}
+@media(max-width:560px){.account-identity-panel{padding:22px;margin:8px auto}.account-identity-panel .account-header-card{align-items:flex-start;flex-direction:column}.account-identity-footer{align-items:flex-start;flex-direction:column;gap:8px}.account-stats>summary span{float:none;display:block;margin-top:6px}}

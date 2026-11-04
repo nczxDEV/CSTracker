@@ -17,12 +17,26 @@
   <link rel="stylesheet" href="recent-form.css" />
   <link rel="stylesheet" href="faceit-match-history.css" />
   <link rel="stylesheet" href="account.css" />
+  <link rel="stylesheet" href="welcome.css" />
   <link rel="stylesheet" href="time-performance.css" />
   <link rel="stylesheet" href="dodge-or-play.css" />
   <link rel="stylesheet" href="theme-glass.css" />
   <link rel="stylesheet" href="onboarding.css" />
+  <link rel="stylesheet" href="intro.css" />
+  <link rel="stylesheet" href="demo-analyzer.css" />
+  <link rel="stylesheet" href="player-hq.css" />
+  <link rel="stylesheet" href="launcher-navigation.css" />
 </head>
 <body class="launcher-body">
+  <div id="welcome-overlay" hidden role="dialog" aria-modal="true" aria-labelledby="welcome-heading">
+    <button id="welcome-skip" type="button">Skip welcome &rarr;</button>
+    <div class="welcome-content">
+      <div class="welcome-portrait"><div id="welcome-halo" class="welcome-halo" aria-hidden="true"></div><div id="welcome-avatar" class="welcome-avatar">?</div></div>
+      <p class="welcome-eyebrow">WELCOME BACK</p>
+      <h1 id="welcome-heading">Welcome, <span id="welcome-name"></span></h1>
+      <p id="welcome-source"></p>
+    </div>
+  </div>
   <div id="startup-loading-overlay">
     <img src="assets/logo.png" alt="CS Tracker" />
     <div class="lookup-spinner"></div>
@@ -35,7 +49,7 @@
        (both FACEIT + Steam API keys already configured -> hidden
        immediately; otherwise stays up and blocks the rest of the app
        until the user finishes it). See onboarding.js. -->
-  <div id="onboarding-overlay" class="onb-overlay">
+  <div id="onboarding-overlay" class="onb-overlay intro-active">
     <div class="onb-wizard">
       <div class="onb-top">
         <div class="onb-brand">CS <span>TRACKER</span> SETUP &middot; First Launch</div>
@@ -49,31 +63,23 @@
 
       <!-- STEP 0: Welcome -->
       <div class="onb-step active" data-onb-step="0">
-        <div class="onb-badge-diamond"></div>
-        <h1>Welcome! Let's set up your overlay</h1>
-        <p class="onb-lead">
-          This takes about a minute: enter your FACEIT and Steam Web API
-          keys, and optionally connect CS2's official live match data
-          (Game State Integration). Both API keys are required before you
-          can start using CS Tracker.
-        </p>
-        <div class="onb-actions">
-          <span></span>
-          <div class="onb-right">
-            <button type="button" class="onb-btn onb-btn-primary" data-onb-goto="1">Get Started &rarr;</button>
-          </div>
+        <div class="glacial-intro">
+          <header><strong>CS TRACKER</strong><div><button type="button" data-onb-goto="1">Set up &nearr;</button><button type="button" class="onb-skip-setup-btn">Skip setup &rarr;</button></div></header>
+          <div class="glacial-scene"><div class="glacial-horizon" aria-hidden="true"></div><div class="glacial-ground" aria-hidden="true"></div><div class="glacial-pedestal" aria-hidden="true"></div><img id="glacial-logo" src="assets/logo-mark-hd.png" alt="CS Tracker logo" /><div class="glacial-copy"><span>YOUR GAME. IN PERSPECTIVE.</span><h1>Every match.<br>A clearer picture.</h1><p>Track your progress. Replay the moments that matter.</p></div></div>
+          <footer><span>Welcome to CS Tracker</span></footer>
         </div>
       </div>
 
-      <!-- STEP 1: API keys (required) -->
+      <!-- STEP 1: API keys for online player stats -->
       <div class="onb-step" data-onb-step="1">
         <h1>FACEIT &amp; Steam API keys</h1>
         <p class="onb-lead">
           These power your rank/ELO/level, K/D, win rate, and Steam
-          ban-safety data. Both keys are required to continue - CS
+          ban-safety data. Both keys are needed for online stats. CS
           Tracker stores them locally (backend SQLite database) and only
           ever sends them to the official FACEIT/Steam APIs.
         </p>
+        <button type="button" class="onb-btn onb-btn-ghost onb-skip-setup-btn" style="margin-bottom:18px;">Skip setup</button>
 
         <label>FACEIT API Key</label>
         <div class="onb-field">
@@ -174,7 +180,12 @@
       </button>
     </header>
 
-    <nav class="launcher-nav" id="launcher-nav">
+    <nav class="launcher-nav command-nav" id="launcher-nav" aria-label="Main navigation">
+      <details class="command-menu" id="launcher-menu">
+        <summary id="launcher-menu-toggle" aria-controls="launcher-menu-pages"><span aria-hidden="true">☰</span> Menu</summary>
+        <div class="command-menu-pages" id="launcher-menu-pages" aria-label="All pages">
+      <span class="command-menu-label">WORKSPACE</span>
+      <button class="nav-tab" data-tab-target="tab-player-hq"><span class="nav-icon">◈</span><span class="nav-label">Player HQ</span></button>
       <button class="nav-tab active" data-tab-target="tab-overview">
         <span class="nav-icon">&#9678;</span><span class="nav-label">Overview</span>
       </button>
@@ -190,6 +201,9 @@
       <button class="nav-tab" data-tab-target="tab-player-summary">
         <span class="nav-icon">&#9670;</span><span class="nav-label">Player Summary</span>
       </button>
+      <button class="nav-tab" data-tab-target="tab-demo-analyzer">
+        <span class="nav-icon">&#9654;</span><span class="nav-label">Demo Analyzer</span>
+      </button>
       <button class="nav-tab" data-tab-target="tab-time-performance">
         <span class="nav-icon">&#9202;</span><span class="nav-label">Time Performance</span>
       </button>
@@ -197,12 +211,19 @@
         <img class="nav-icon nav-icon-img" src="assets/icons/dodge-or-play.png" alt="" />
         <span class="nav-label">Dodge or Play</span>
       </button>
+      <button class="nav-tab" data-tab-target="tab-account"><span class="nav-icon" aria-hidden="true">◉</span><span class="nav-label">Account</span></button>
+        </div>
+      </details>
+      <span id="launcher-current-page" class="command-page-announcement" aria-live="polite">Overview</span>
     </nav>
 
     <div class="launcher-content">
+    <div class="launcher-tab-panel" id="tab-player-hq" data-tab="tab-player-hq">
+      <section id="player-hq"></section>
+    </div>
     <div class="launcher-tab-panel active" id="tab-overview" data-tab="tab-overview">
 
-    <section class="launcher-section" id="current-match-section">
+    <section class="launcher-section" id="current-match-section" data-gsi-stats hidden>
       <h2>Current Match <span class="badge-optional">GSI</span></h2>
       <div class="control-row">
         <span class="status-dot" id="live-match-status-dot" title="Not connected"></span>
@@ -249,33 +270,10 @@
       </p>
     </section>
 
-    <section class="launcher-section" id="manual-mode-section">
-      <h2>Manual Mode <span class="badge-optional">No GSI needed</span></h2>
-      <div class="control-row">
-        <input
-          id="inline-roster-input"
-          type="text"
-          placeholder="One Steam ID / FACEIT nickname, then click Add"
-        />
-        <button id="inline-add-roster-entry-btn" class="secondary-btn" style="flex:0 0 auto;">Add</button>
-      </div>
-      <div id="inline-roster-chips" class="roster-chips"></div>
-      <div class="control-row">
-        <button id="inline-resolve-btn" class="primary-btn">Look Up</button>
-        <button id="inline-clear-btn" class="secondary-btn">Clear</button>
-        <button id="inline-compact-toggle-btn" class="secondary-btn">Compact View</button>
-      </div>
-      <p class="hint">
-        Type one name/ID, click <b>Add</b> (or press Enter) to queue it, repeat
-        for up to 10 players, then click <b>Look Up</b>. The first 5 →
-        <b>TEAM A</b>, the next 5 → <b>TEAM B</b>. Click a player's name to
-        save them to the list below. By default a plain name is matched
-        against FACEIT first, then Steam - prefix it with <code>steam:</code>
-        or <code>faceit:</code> (e.g. <code>faceit:xadez</code>) to force a
-        specific platform.
-      </p>
+    <section class="launcher-section" id="match-roster-section">
+      <h2>Match Roster</h2>
       <div id="inline-tracker-body-root" class="inline-tracker-body">
-        <div class="empty-state">Enter up to 10 players above, then click <b>Look Up</b> - or load your live match above, if GSI is connected.</div>
+        <div class="empty-state">Load a FACEIT matchroom or a connected live match to see its roster.</div>
       </div>
     </section>
 
@@ -501,6 +499,13 @@
 
     </div>
     <div class="launcher-tab-panel" id="tab-appearance" data-tab="tab-appearance">
+    <section class="launcher-section">
+      <h2>Welcome animation</h2>
+      <label class="welcome-setting"><input type="checkbox" id="welcome-animation-toggle" checked /> Show my profile welcome when CS Tracker starts</label>
+      <p class="hint">A two-second greeting with your saved name, profile photo and a soft RGB glow. Plays once per full launch, not when returning from the tray. Respects reduced-motion settings.</p>
+      <button type="button" id="welcome-preview-btn" class="secondary-btn">Preview welcome</button>
+      <p id="welcome-setting-status" class="hint" role="status"></p>
+    </section>
 
     <section class="launcher-section" id="ui-theme-section">
       <h2>UI Theme <span class="badge-optional">New</span></h2>
@@ -692,6 +697,14 @@
     </section>
 
     </div>
+    <div class="launcher-tab-panel" id="tab-demo-analyzer" data-tab="tab-demo-analyzer">
+      <section class="launcher-section">
+        <h2>Demo Studio</h2>
+        <p class="hint">Review rounds, grenades and economy in a dedicated replay window.</p>
+        <button type="button" class="primary-btn" id="open-demo-studio">Open Demo Studio</button>
+        <p id="demo-window-status" role="status"></p>
+      </section>
+    </div>
     <div class="launcher-tab-panel" id="tab-player-summary" data-tab="tab-player-summary">
 
     <section class="launcher-section" id="ps-lookup-section">
@@ -722,7 +735,7 @@
 
     <div id="fmh-root"></div>
 
-    <section class="launcher-section" id="match-history-section">
+    <section class="launcher-section" id="match-history-section" data-gsi-stats hidden>
       <h2>
         My Match History <span class="badge-optional">GSI</span>
         <span class="mp-toggle-row" id="match-history-view-toggle" style="margin-top:0;">
@@ -818,52 +831,45 @@
          History) instead of manual nickname entry every time. -->
     <div class="launcher-tab-panel" id="tab-account" data-tab="tab-account">
 
-      <section class="launcher-section account-header-card" id="account-header-section">
+      <section class="account-identity-panel" aria-label="Player identity">
+      <div class="account-kicker">ACCOUNT / CS TRACKER</div>
+      <div class="account-header-card" id="account-header-section">
         <div class="account-header-avatar" id="account-header-avatar">?</div>
         <div class="account-header-id">
-          <div class="account-header-name" id="account-header-name">Not signed in</div>
-          <div class="account-header-sub" id="account-header-sub">Link a FACEIT or Steam account below.</div>
+          <h1 class="account-header-name" id="account-header-name">Make it your HQ.</h1>
+          <div class="account-header-sub" id="account-header-sub">Connect your FACEIT identity. Your progress follows.</div>
         </div>
-      </section>
+      </div>
 
-      <section class="launcher-section" id="linked-accounts-section">
-        <h2>Linked Accounts</h2>
-        <p class="hint">
-          Connect your FACEIT and/or Steam account once - CS Tracker then
-          automatically knows who you are everywhere in the app (Player
-          Summary, My Match History), instead of typing your own
-          nickname every time. Login happens in your system's default
-          browser (never inside this app's own window), the standard,
-          secure way desktop apps handle FACEIT/Steam sign-in.
-        </p>
+      <div id="linked-accounts-section">
 
         <div class="linked-account-row" id="linked-account-row-faceit">
-          <div class="linked-account-icon faceit">FC</div>
           <div class="linked-account-main">
             <div class="linked-account-provider">FACEIT</div>
             <div class="linked-account-name" id="linked-account-name-faceit">Not connected</div>
           </div>
-          <button type="button" class="secondary-btn" id="faceit-login-btn">Login with FACEIT</button>
-          <button type="button" class="secondary-btn danger-btn" id="faceit-unlink-btn" style="display:none;">Unlink</button>
+          <button type="button" class="secondary-btn" id="faceit-login-btn">Log in with FACEIT &nearr;</button>
+          <button type="button" class="secondary-btn danger-btn" id="faceit-unlink-btn" style="display:none;">Disconnect</button>
         </div>
 
         <div class="linked-account-row" id="linked-account-row-steam">
-          <div class="linked-account-icon steam">ST</div>
           <div class="linked-account-main">
             <div class="linked-account-provider">Steam</div>
             <div class="linked-account-name" id="linked-account-name-steam">Not connected</div>
+            <div class="account-optional">Optional &middot; Steam profile and linked stats</div>
           </div>
-          <button type="button" class="secondary-btn" id="steam-login-btn">Login with Steam</button>
-          <button type="button" class="secondary-btn danger-btn" id="steam-unlink-btn" style="display:none;">Unlink</button>
+          <button type="button" class="secondary-btn" id="steam-login-btn">Connect Steam &nearr;</button>
+          <button type="button" class="secondary-btn danger-btn" id="steam-unlink-btn" style="display:none;">Disconnect</button>
         </div>
 
-        <div class="note-status" id="account-login-status"></div>
+        <div class="account-identity-footer"><span>Sign-in opens in your browser. Your linked account is remembered on this PC.</span><button type="button" class="secondary-btn" id="account-api-settings">API settings</button></div>
+        <div class="note-status" id="account-login-status" role="status"></div>
+      </div>
       </section>
 
-      <section class="launcher-section" id="my-leetify-stats-section" style="display:none;">
-        <div class="section-title-row">
-          <h2 style="margin:0;">My Leetify Stats <span class="badge-optional">Personal</span></h2>
-        </div>
+      <details class="account-stats" id="my-leetify-stats-section" style="display:none;">
+        <summary>My Leetify stats <span>Linked Steam account</span></summary>
+        <div class="account-stats-body">
         <p class="hint" style="margin-top:6px;">
           Automatically loaded for your linked Steam account - your
           overall aim/positioning/utility ratings and recent match
@@ -872,7 +878,8 @@
         <div id="my-leetify-stats-root">
           <div class="empty-state">Link your Steam account above to see your Leetify stats.</div>
         </div>
-      </section>
+        </div>
+      </details>
 
     </div>
     </div>
@@ -897,6 +904,8 @@
   <script src="cyberpunk-bg.js"></script>
   <script src="teamspirit-bg.js"></script>
   <script src="settings-store.js"></script>
+  <script src="api-key-fields.js"></script>
+  <script src="welcome.js"></script>
   <script src="saved-players-client.js"></script>
   <script src="tracker-render.js"></script>
   <script src="elo-forecast.js"></script>
@@ -907,8 +916,14 @@
   <script src="dodge-or-play.js"></script>
   <script src="player-summary.js"></script>
   <script src="onboarding.js"></script>
+  <script src="gsi-visibility.js"></script>
+  <script src="intro.js"></script>
   <script src="updater.js"></script>
   <script src="account.js"></script>
+  <script src="demo-launcher.js"></script>
+  <script src="launcher-navigation.js"></script>
   <script src="launcher.js"></script>
+  <script src="player-hq-model.js"></script>
+  <script src="player-hq.js"></script>
 </body>
 </html>

@@ -315,7 +315,7 @@
     els.resultRoot.innerHTML = `
       <div class="lookup-error-state">
         <div class="lookup-error-title">\u26A0 Lookup failed</div>
-        <div class="lookup-error-detail">${message || "Unknown error."}</div>
+        <div class="lookup-error-detail">${String(message || 'Unknown error.').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</div>
         <div class="lookup-error-hint">
           Check that the backend is running and reachable, and that your
           FACEIT API key is configured correctly (Setup &amp; GSI tab).
@@ -346,7 +346,8 @@
     try {
       const res = await fetch(`${PS_BACKEND_URL}/players/${encodeURIComponent(nickname)}/summary`);
       if (!res.ok) {
-        throw new Error(`Server responded with ${res.status}`);
+        let body;try{body=await res.json();}catch{}
+        throw new Error(typeof body?.message==='string'?body.message:`Lookup failed (${res.status}). Please retry.`);
       }
       const profile = await res.json();
       if (!profile || (!profile.faceit && !profile.stats)) {

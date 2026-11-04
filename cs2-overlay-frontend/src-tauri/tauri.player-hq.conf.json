@@ -1,0 +1,8 @@
+{
+  "productName":"CS Tracker Player HQ Preview",
+  "version":"0.4.0",
+  "identifier":"com.cstracker.demo-preview",
+  "build":{"features":["bundled-backend"]},
+  "bundle":{"createUpdaterArtifacts":false},
+  "plugins":{"updater":{"active":false}}
+}

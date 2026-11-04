@@ -29,6 +29,21 @@
   // Updates" and "Download & Install Update" being clicked, so the second
   // step doesn't need to re-check.
   let pendingUpdate = null;
+  // This frontend uses plain script tags: plugin npm modules are not globals.
+  const core = window.__TAURI__?.core;
+  const updaterApi = core?.invoke && core?.Channel ? {
+    async check() {
+      const metadata = await core.invoke('plugin:updater|check');
+      if (!metadata) return null;
+      return { ...metadata, async downloadAndInstall(onEvent) {
+        const channel = new core.Channel(); channel.onmessage = onEvent;
+        const bytesRid = await core.invoke('plugin:updater|download', { rid:metadata.rid, onEvent:channel });
+        // Release the executable lock before starting the Windows installer.
+        await core.invoke('prepare_for_update');
+        await core.invoke('plugin:updater|install', { updateRid:metadata.rid, bytesRid });
+      }};
+    }
+  } : null;
 
   function setStatus(label, variant) {
     // variant: 'idle' | 'ok' | 'available' | 'err'
@@ -62,7 +77,7 @@
    * clicked "Check for Updates" themselves.
    */
   async function checkForUpdate(silent) {
-    const updater = window.__TAURI__?.updater;
+    const updater = updaterApi;
     if (!updater?.check) {
       if (!silent) {
         setStatus(
@@ -143,7 +158,7 @@
       });
 
       els.progressStatus.textContent = "Update installed - restarting CS Tracker...";
-      const relaunch = window.__TAURI__?.process?.relaunch;
+      const relaunch = core?.invoke ? () => core.invoke('plugin:process|restart') : null;
       if (relaunch) {
         // Brief pause so the "installed, restarting" message is actually
         // readable before the window disappears.

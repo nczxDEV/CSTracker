@@ -1,5 +1,5 @@
 import { HttpService } from '@nestjs/axios';
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, ServiceUnavailableException, HttpException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { SettingsService } from '../../settings/settings.service';
@@ -65,8 +65,42 @@ export class FaceitClient {
       );
       return response.data;
     } catch (err) {
-      this.logger.warn(`FACEIT player not found by nickname: ${nickname}`);
-      return null;
+      if ((err as any)?.response?.status !== 404) return this.lookupFailure(err);
+      // The exact nickname endpoint is case-sensitive. Never substitute a
+      // fuzzy search result: require a unique case-insensitive exact name.
+      try {
+        const search = await firstValueFrom(this.http.get(`${this.baseUrl}/search/players`, {
+          headers: this.authHeaders, params: { nickname: nickname.trim(), limit: 100 }, timeout: 15000,
+        }));
+        const matches = (search.data?.items ?? []).filter((p: any) =>
+          typeof p.nickname === 'string' && p.nickname.toLowerCase() === nickname.trim().toLowerCase());
+        if (matches.length !== 1 || !matches[0].player_id) return null;
+        const response = await firstValueFrom(this.http.get(`${this.baseUrl}/players/${encodeURIComponent(matches[0].player_id)}`, {
+          headers: this.authHeaders, timeout: 15000,
+        }));
+        return response.data;
+      } catch (fallbackError) {
+        if ((fallbackError as any)?.response?.status === 404) return null;
+        return this.lookupFailure(fallbackError);
+      }
+    }
+  }
+
+  private lookupFailure(error: unknown): never {
+    const status = (error as any)?.response?.status;
+    if (status === 401 || status === 403) throw new ServiceUnavailableException({error:'FACEIT_KEY_REJECTED',message:'FACEIT rejected the saved API key. Save a valid server-side FACEIT Data API key in Setup & GSI.'});
+    if (status === 429) throw new HttpException({error:'FACEIT_RATE_LIMIT',message:'FACEIT rate limit reached. Wait a moment and try again.'},429);
+    throw new ServiceUnavailableException({error:'FACEIT_UNAVAILABLE',message:'FACEIT could not be reached. Please retry shortly.'});
+  }
+
+  async getPlayerById(playerId: string): Promise<any | null> {
+    if (!this.isConfigured) return null;
+    try {
+      const response = await firstValueFrom(this.http.get(`${this.baseUrl}/players/${encodeURIComponent(playerId)}`, {headers:this.authHeaders,timeout:15000}));
+      return response.data;
+    } catch (error) {
+      if ((error as any)?.response?.status === 404) return null;
+      return this.lookupFailure(error);
     }
   }
 
@@ -117,6 +151,14 @@ export class FaceitClient {
       this.logger.warn(`FACEIT stats not found for playerId: ${playerId}`);
       return null;
     }
+  }
+
+  async getRecentMatchStats(playerId: string): Promise<any | null> {
+    if (!this.isConfigured) return null;
+    try {
+      const response = await firstValueFrom(this.http.get(`${this.baseUrl}/players/${encodeURIComponent(playerId)}/games/cs2/stats`, { headers: this.authHeaders, params: { limit: 100 }, timeout: 15000 }));
+      return response.data;
+    } catch { return null; }
   }
 
   /**

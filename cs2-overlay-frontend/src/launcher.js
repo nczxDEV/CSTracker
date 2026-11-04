@@ -987,9 +987,9 @@ function addToInlineRosterQueue() {
   els.inlineRosterInput.focus();
 }
 
-els.inlineAddRosterEntryBtn.addEventListener("click", addToInlineRosterQueue);
+els.inlineAddRosterEntryBtn?.addEventListener("click", addToInlineRosterQueue);
 
-els.inlineRosterInput.addEventListener("keydown", (e) => {
+els.inlineRosterInput?.addEventListener("keydown", (e) => {
   if (e.key === "Enter") {
     e.preventDefault();
     addToInlineRosterQueue();
@@ -1015,9 +1015,9 @@ async function runInlineRosterLookup() {
   }
 }
 
-els.inlineResolveBtn.addEventListener("click", runInlineRosterLookup);
+els.inlineResolveBtn?.addEventListener("click", runInlineRosterLookup);
 
-els.inlineClearBtn.addEventListener("click", () => {
+els.inlineClearBtn?.addEventListener("click", () => {
   els.inlineRosterInput.value = "";
   inlineRosterQueue = [];
   renderInlineRosterChips();
@@ -1025,7 +1025,7 @@ els.inlineClearBtn.addEventListener("click", () => {
   inlineTracker.render();
 });
 
-els.inlineCompactToggleBtn.addEventListener("click", () => {
+els.inlineCompactToggleBtn?.addEventListener("click", () => {
   const isCompact = inlineTracker.toggleCompact();
   els.inlineCompactToggleBtn.textContent = isCompact ? "Full View" : "Compact View";
   els.inlineCompactToggleBtn.classList.toggle("active", isCompact);
@@ -1297,6 +1297,9 @@ async function loadSettingsStatus() {
     const status = await res.json();
     setStatusDot(els.faceitStatusDot, status.faceitConfigured);
     setStatusDot(els.steamStatusDot, status.steamConfigured);
+    window.ApiKeyFields.sync(els.faceitApiKey,status.faceitConfigured);
+    window.ApiKeyFields.sync(els.steamApiKey,status.steamConfigured);
+    window.ApiKeyFields.sync(els.leetifyApiKey,status.leetifyConfigured);
     // NOTE: "configured" here only means both the Leetify key AND base
     // URL are saved on the backend - it does NOT mean Leetify stats will
     // actually load, since there is no official public Leetify API (see
@@ -1325,9 +1328,9 @@ function setStatusDot(el, configured) {
 
 els.saveApiKeysBtn.addEventListener("click", async () => {
   const payload = {
-    faceitApiKey: els.faceitApiKey.value.trim() || undefined,
-    steamApiKey: els.steamApiKey.value.trim() || undefined,
-    leetifyApiKey: els.leetifyApiKey.value.trim() || undefined,
+    faceitApiKey: window.ApiKeyFields.value(els.faceitApiKey),
+    steamApiKey: window.ApiKeyFields.value(els.steamApiKey),
+    leetifyApiKey: window.ApiKeyFields.value(els.leetifyApiKey),
   };
   els.saveApiKeysBtn.disabled = true;
   try {
@@ -1343,11 +1346,9 @@ els.saveApiKeysBtn.addEventListener("click", async () => {
     setStatusDot(els.leetifyStatusDot, status.leetifyConfigured);
     els.apiKeysSaveStatus.textContent = "Saved \u2713";
     els.apiKeysSaveStatus.classList.add("saved");
-    // Clear the password fields after a successful save - the dot
-    // indicators show configured state without needing to redisplay keys.
-    els.faceitApiKey.value = "";
-    els.steamApiKey.value = "";
-    els.leetifyApiKey.value = "";
+    window.ApiKeyFields.sync(els.faceitApiKey,status.faceitConfigured);
+    window.ApiKeyFields.sync(els.steamApiKey,status.steamConfigured);
+    window.ApiKeyFields.sync(els.leetifyApiKey,status.leetifyConfigured);
   } catch (err) {
     console.warn("saveApiKeys failed:", err);
     els.apiKeysSaveStatus.textContent = "Failed to save (backend unreachable?)";
@@ -1377,6 +1378,7 @@ async function pollGsiStatus() {
     const res = await fetch(`${BACKEND_URL}/gsi/state`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const state = await res.json();
+    window.dispatchEvent(new CustomEvent('cstracker-gsi-state', { detail: state }));
     if (state.connected) {
       els.gsiStatusDot.classList.add("dot-ok");
       els.gsiStatusDot.classList.remove("dot-missing");
@@ -1636,6 +1638,8 @@ els.savedPlayersSortDirBtn.addEventListener("click", () => {
 // Setup & GSI / Saved Players tabs instead of one long scrolling page.
 // ---------------------------------------------------------------------------
 function activateTab(targetId) {
+  window.LauncherNavigation?.sync(targetId);
+  if (targetId === "tab-demo-analyzer") window.openDemoStudio?.();
   els.navTabs.forEach((btn) => {
     btn.classList.toggle("active", btn.getAttribute("data-tab-target") === targetId);
   });
@@ -1755,8 +1759,10 @@ function hideStartupLoadingOverlay() {
   setUiTheme(settings.uiTheme);
 
   inlineTracker.setCompact(Boolean(settings.defaultCompactView));
-  els.inlineCompactToggleBtn.textContent = inlineTracker.isCompact() ? "Full View" : "Compact View";
-  els.inlineCompactToggleBtn.classList.toggle("active", inlineTracker.isCompact());
+  if (els.inlineCompactToggleBtn) {
+    els.inlineCompactToggleBtn.textContent = inlineTracker.isCompact() ? "Full View" : "Compact View";
+    els.inlineCompactToggleBtn.classList.toggle("active", inlineTracker.isCompact());
+  }
 
   els.quitOnCloseToggle.checked = Boolean(settings.quitOnClose);
 
@@ -1782,14 +1788,7 @@ function hideStartupLoadingOverlay() {
     });
   }
 
-  // First-launch Onboarding Wizard gate (see onboarding.js/onboarding.html):
-  // the wizard overlay is visible by default and sits on top of both the
-  // startup-loading overlay and the rest of the Control Panel, so it is
-  // never possible to reach/interact with the full app before both the
-  // FACEIT and Steam API keys are configured. checkAndShow() resolves
-  // immediately if they already are (hiding the wizard right away, same
-  // as before this feature existed) - otherwise it only resolves once the
-  // user completes the wizard.
+  // Optional first-launch setup: complete it or skip to the main window.
   await window.OnboardingWizard?.checkAndShow?.();
 
   // Keep the loading overlay visible for at least 400ms total, so it
@@ -1798,5 +1797,7 @@ function hideStartupLoadingOverlay() {
   // itself already covered the startup overlay this whole time) - it
   // just makes sure the startup overlay is definitely removed by now.
   const elapsed = Date.now() - startedAt;
-  setTimeout(hideStartupLoadingOverlay, Math.max(0, 400 - elapsed));
+  await new Promise(resolve=>setTimeout(resolve,Math.max(0,400-elapsed)));
+  if(window.WelcomeExperience)await window.WelcomeExperience.start(hideStartupLoadingOverlay);
+  else hideStartupLoadingOverlay();
 })();

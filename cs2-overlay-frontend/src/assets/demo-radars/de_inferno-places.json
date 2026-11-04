@@ -1,0 +1,646 @@
+[
+  {
+    "Name": "Bridge",
+    "EnglishName": "Bridge",
+    "MinBound": {
+      "X": -434,
+      "Y": -279,
+      "Z": 200.7655
+    },
+    "MaxBound": {
+      "X": -309,
+      "Y": 20,
+      "Z": 307.2655
+    }
+  },
+  {
+    "Name": "SecondMid",
+    "EnglishName": "Second Mid",
+    "MinBound": {
+      "X": -624,
+      "Y": -260,
+      "Z": 6.0827484
+    },
+    "MaxBound": {
+      "X": 952,
+      "Y": 21,
+      "Z": 184.7345
+    }
+  },
+  {
+    "Name": "Middle",
+    "EnglishName": "Middle",
+    "MinBound": {
+      "X": 55.999817,
+      "Y": 421,
+      "Z": 88.73449
+    },
+    "MaxBound": {
+      "X": 1296,
+      "Y": 660,
+      "Z": 238.7395
+    }
+  },
+  {
+    "Name": "Balcony",
+    "EnglishName": "Balcony",
+    "MinBound": {
+      "X": 916,
+      "Y": -180,
+      "Z": 264.7655
+    },
+    "MaxBound": {
+      "X": 984,
+      "Y": -79,
+      "Z": 371.2655
+    }
+  },
+  {
+    "Name": "Quad",
+    "EnglishName": "Quad",
+    "MinBound": {
+      "X": 1341,
+      "Y": -129,
+      "Z": 138.7655
+    },
+    "MaxBound": {
+      "X": 1520,
+      "Y": 12,
+      "Z": 344.7345
+    }
+  },
+  {
+    "Name": "CTSpawn",
+    "EnglishName": "CT Start",
+    "MinBound": {
+      "X": 1641,
+      "Y": 1596,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 2592,
+      "Y": 2932,
+      "Z": 304.7345
+    }
+  },
+  {
+    "Name": "Deck",
+    "EnglishName": "Deck",
+    "MinBound": {
+      "X": -112,
+      "Y": -31.999992,
+      "Z": 216.7345
+    },
+    "MaxBound": {
+      "X": 248,
+      "Y": 156,
+      "Z": 299.2655
+    }
+  },
+  {
+    "Name": "Upstairs",
+    "EnglishName": "Upstairs",
+    "MinBound": {
+      "X": -584.0001,
+      "Y": 76,
+      "Z": 48.76581
+    },
+    "MaxBound": {
+      "X": -312.00012,
+      "Y": 371,
+      "Z": 299.2655
+    }
+  },
+  {
+    "Name": "SecondMid",
+    "EnglishName": "Second Mid",
+    "MinBound": {
+      "X": 716.0001,
+      "Y": 19.5,
+      "Z": 6.0827484
+    },
+    "MaxBound": {
+      "X": 964.0001,
+      "Y": 408,
+      "Z": 224.7345
+    }
+  },
+  {
+    "Name": "Middle",
+    "EnglishName": "Middle",
+    "MinBound": {
+      "X": 55.999878,
+      "Y": 664.5,
+      "Z": 92.7345
+    },
+    "MaxBound": {
+      "X": 356,
+      "Y": 940,
+      "Z": 238.7395
+    }
+  },
+  {
+    "Name": "Apartments",
+    "EnglishName": "Apartments",
+    "MinBound": {
+      "X": -432,
+      "Y": -708,
+      "Z": 104.7345
+    },
+    "MaxBound": {
+      "X": 352,
+      "Y": -324,
+      "Z": 328.7345
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -1728,
+      "Y": -196,
+      "Z": -39.265503
+    },
+    "MaxBound": {
+      "X": -1376,
+      "Y": 860,
+      "Z": 152.7345
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -1328,
+      "Y": 476,
+      "Z": -39.265503
+    },
+    "MaxBound": {
+      "X": -896,
+      "Y": 604,
+      "Z": 152.7345
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -1328,
+      "Y": 107.999985,
+      "Z": -39.265503
+    },
+    "MaxBound": {
+      "X": -1168,
+      "Y": 428,
+      "Z": 152.7345
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -1280,
+      "Y": -468.00003,
+      "Z": -39.265503
+    },
+    "MaxBound": {
+      "X": -1152,
+      "Y": -51.99997,
+      "Z": 152.7345
+    }
+  },
+  {
+    "Name": "LowerMid",
+    "EnglishName": "Lower Mid",
+    "MinBound": {
+      "X": -1040,
+      "Y": -484,
+      "Z": -7.265503
+    },
+    "MaxBound": {
+      "X": -640,
+      "Y": 220,
+      "Z": 184.7345
+    }
+  },
+  {
+    "Name": "LowerMid",
+    "EnglishName": "Lower Mid",
+    "MinBound": {
+      "X": -848,
+      "Y": 428,
+      "Z": -7.265503
+    },
+    "MaxBound": {
+      "X": -416,
+      "Y": 796,
+      "Z": 184.7345
+    }
+  },
+  {
+    "Name": "TRamp",
+    "EnglishName": "T Ramp",
+    "MinBound": {
+      "X": -400,
+      "Y": 780,
+      "Z": -7.265503
+    },
+    "MaxBound": {
+      "X": 24,
+      "Y": 924,
+      "Z": 184.7345
+    }
+  },
+  {
+    "Name": "TRamp",
+    "EnglishName": "T Ramp",
+    "MinBound": {
+      "X": -544,
+      "Y": 812,
+      "Z": -7.265503
+    },
+    "MaxBound": {
+      "X": -400,
+      "Y": 924,
+      "Z": 184.7345
+    }
+  },
+  {
+    "Name": "Arch",
+    "EnglishName": "Arch",
+    "MinBound": {
+      "X": 1536,
+      "Y": 1004,
+      "Z": 168.7345
+    },
+    "MaxBound": {
+      "X": 2144,
+      "Y": 1228,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Arch",
+    "EnglishName": "Arch",
+    "MinBound": {
+      "X": 1760,
+      "Y": 1228,
+      "Z": 168.7345
+    },
+    "MaxBound": {
+      "X": 1872,
+      "Y": 1580,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Library",
+    "EnglishName": "Library",
+    "MinBound": {
+      "X": 2304,
+      "Y": 1404,
+      "Z": 168.7345
+    },
+    "MaxBound": {
+      "X": 2672,
+      "Y": 1564,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Library",
+    "EnglishName": "Library",
+    "MinBound": {
+      "X": 2496,
+      "Y": 1100,
+      "Z": 168.7345
+    },
+    "MaxBound": {
+      "X": 2672,
+      "Y": 1404,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Balcony",
+    "EnglishName": "Balcony",
+    "MinBound": {
+      "X": 1952,
+      "Y": -260,
+      "Z": 264.7345
+    },
+    "MaxBound": {
+      "X": 2112,
+      "Y": -131.99998,
+      "Z": 392.7345
+    }
+  },
+  {
+    "Name": "Balcony",
+    "EnglishName": "Balcony",
+    "MinBound": {
+      "X": 2080,
+      "Y": -372,
+      "Z": 264.7345
+    },
+    "MaxBound": {
+      "X": 2112,
+      "Y": -260,
+      "Z": 392.7345
+    }
+  },
+  {
+    "Name": "Pit",
+    "EnglishName": "Pit",
+    "MinBound": {
+      "X": 2096,
+      "Y": -516,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 2624,
+      "Y": -164,
+      "Z": 232.7345
+    }
+  },
+  {
+    "Name": "Pit",
+    "EnglishName": "Pit",
+    "MinBound": {
+      "X": 2448,
+      "Y": -164,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 2624,
+      "Y": -20,
+      "Z": 232.7345
+    }
+  },
+  {
+    "Name": "BombsiteA",
+    "EnglishName": "Bombsite A",
+    "MinBound": {
+      "X": 1600,
+      "Y": -116,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 2400,
+      "Y": 716,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "BombsiteA",
+    "EnglishName": "Bombsite A",
+    "MinBound": {
+      "X": 2176,
+      "Y": 716,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 2416,
+      "Y": 1188,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Apartments",
+    "EnglishName": "Apartments",
+    "MinBound": {
+      "X": 992,
+      "Y": -708,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 1280,
+      "Y": 364,
+      "Z": 408.7345
+    }
+  },
+  {
+    "Name": "Apartments",
+    "EnglishName": "Apartments",
+    "MinBound": {
+      "X": 1312,
+      "Y": -388,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 1936,
+      "Y": -148,
+      "Z": 408.7345
+    }
+  },
+  {
+    "Name": "BackAlley",
+    "EnglishName": "Back Alley",
+    "MinBound": {
+      "X": 448,
+      "Y": -772,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 960,
+      "Y": -324,
+      "Z": 232.7345
+    }
+  },
+  {
+    "Name": "BombsiteB",
+    "EnglishName": "Bombsite B",
+    "MinBound": {
+      "X": 32,
+      "Y": 2348,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 992,
+      "Y": 2988,
+      "Z": 360.7345
+    }
+  },
+  {
+    "Name": "BombsiteB",
+    "EnglishName": "Bombsite B",
+    "MinBound": {
+      "X": 32,
+      "Y": 2988,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 576,
+      "Y": 3596,
+      "Z": 360.7345
+    }
+  },
+  {
+    "Name": "BombsiteB",
+    "EnglishName": "Bombsite B",
+    "MinBound": {
+      "X": 576,
+      "Y": 3356,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 816,
+      "Y": 3596,
+      "Z": 360.7345
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": 672,
+      "Y": 3036,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 1328,
+      "Y": 3276,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": 832,
+      "Y": 3276,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 1072,
+      "Y": 3452,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": 1152,
+      "Y": 2764,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 1616,
+      "Y": 3036,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": 1023.99994,
+      "Y": 2652,
+      "Z": 88.7345
+    },
+    "MaxBound": {
+      "X": 1328,
+      "Y": 2764,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "Banana",
+    "EnglishName": "Banana",
+    "MinBound": {
+      "X": -48,
+      "Y": 956,
+      "Z": 72.734505
+    },
+    "MaxBound": {
+      "X": 464,
+      "Y": 1836,
+      "Z": 312.7345
+    }
+  },
+  {
+    "Name": "Banana",
+    "EnglishName": "Banana",
+    "MinBound": {
+      "X": 240,
+      "Y": 1836,
+      "Z": 72.734505
+    },
+    "MaxBound": {
+      "X": 1008,
+      "Y": 2236,
+      "Z": 312.7345
+    }
+  },
+  {
+    "Name": "Kitchen",
+    "EnglishName": "Kitchen",
+    "MinBound": {
+      "X": -256,
+      "Y": 44,
+      "Z": 184.7345
+    },
+    "MaxBound": {
+      "X": -160,
+      "Y": 364,
+      "Z": 312.7345
+    }
+  },
+  {
+    "Name": "Kitchen",
+    "EnglishName": "Kitchen",
+    "MinBound": {
+      "X": -160,
+      "Y": 252,
+      "Z": 184.7345
+    },
+    "MaxBound": {
+      "X": 48,
+      "Y": 364,
+      "Z": 312.7345
+    }
+  },
+  {
+    "Name": "Underpass",
+    "EnglishName": "Underpass",
+    "MinBound": {
+      "X": 224,
+      "Y": 44.00006,
+      "Z": 8.734497
+    },
+    "MaxBound": {
+      "X": 304,
+      "Y": 732.00006,
+      "Z": 56.734497
+    }
+  },
+  {
+    "Name": "TopofMid",
+    "EnglishName": "Top of Mid",
+    "MinBound": {
+      "X": 1344,
+      "Y": 28,
+      "Z": 136.7345
+    },
+    "MaxBound": {
+      "X": 1504,
+      "Y": 1228,
+      "Z": 296.7345
+    }
+  },
+  {
+    "Name": "BombsiteA",
+    "EnglishName": "Bombsite A",
+    "MinBound": {
+      "X": 2418,
+      "Y": 137.99997,
+      "Z": 120.7345
+    },
+    "MaxBound": {
+      "X": 2492,
+      "Y": 362,
+      "Z": 296.7345
+    }
+  }
+]

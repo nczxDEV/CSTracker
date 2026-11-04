@@ -1,16 +1,4 @@
-// First-launch Onboarding Wizard.
-// Gates the rest of the Control Panel behind a short setup flow until
-// the user has entered BOTH their FACEIT and Steam Web API keys (see
-// README/CS_Tracker_MVP_Backlog.md "Setup Wizard" - this is the
-// mandatory first-run version of that same feature). Purely a UI/UX
-// gate calling the existing, already-ToS-compliant SettingsController
-// endpoints (`GET /settings/status`, `PUT /settings/api-keys`) and the
-// existing GSI config file download flow - no new backend behavior.
-//
-// Self-contained module, same convention as dodge-or-play.js /
-// player-summary.js / etc. (own BACKEND_URL constant, exposes a small
-// API on `window`), loaded BEFORE launcher.js (see launcher.html) so
-// launcher.js's init() can call `window.OnboardingWizard.checkAndShow()`.
+// Optional first-launch setup. Users can skip directly to the main window.
 (function () {
   const ONB_BACKEND_URL = "http://localhost:3000";
 
@@ -34,6 +22,8 @@
   let resolveCompletion = null;
 
   function goTo(stepIndex) {
+    onbEls.overlay?.classList.toggle('intro-active',stepIndex===0);
+    window.dispatchEvent(new CustomEvent('cstracker-intro-step',{detail:stepIndex}));
     onbEls.steps.forEach((step) => {
       step.classList.toggle("active", step.getAttribute("data-onb-step") === String(stepIndex));
     });
@@ -137,6 +127,7 @@
   }
 
   onbEls.finishBtn?.addEventListener("click", () => {
+    localStorage.setItem('cstracker-glacial-onboarding-complete','true');
     hide();
     if (typeof resolveCompletion === "function") {
       const resolve = resolveCompletion;
@@ -145,50 +136,56 @@
     }
   });
 
+  document.querySelectorAll("#onboarding-overlay .onb-skip-setup-btn").forEach((button) => {
+    button.addEventListener("click", () => {
+      localStorage.setItem("cstracker-setup-skipped", "true");
+      localStorage.setItem('cstracker-glacial-onboarding-complete','true');
+      localStorage.removeItem("cstracker-local-demo-mode");
+      hide();
+      window.activateTab?.("tab-overview");
+      if (typeof resolveCompletion === "function") {
+        const resolve = resolveCompletion;
+        resolveCompletion = null;
+        resolve(true);
+      }
+    });
+  });
+
   function hide() {
+    window.dispatchEvent(new CustomEvent('cstracker-intro-step',{detail:-1}));
     if (!onbEls.overlay) return;
     onbEls.overlay.classList.add("onb-hidden");
     setTimeout(() => onbEls.overlay?.remove(), 300);
   }
 
-  /**
-   * Checks whether both FACEIT and Steam API keys are already configured
-   * on the backend. If so, hides the onboarding overlay immediately and
-   * resolves right away - the overlay is visible by default (see
-   * onboarding.css `.onb-overlay`) precisely so there is never a "flash"
-   * of the main app before this check completes. Otherwise, the overlay
-   * stays up (on top of #startup-loading-overlay too) and this only
-   * resolves once the user reaches the final step and clicks
-   * "Start Using CS Tracker".
-   *
-   * Retries the initial status check a few times - the backend sidecar
-   * can take a moment to finish starting up on a cold launch - before
-   * falling back to showing the wizard defensively (safer than silently
-   * letting the user into an unconfigured app).
-   */
   async function checkAndShow() {
-    let status = null;
-    for (let attempt = 0; attempt < 6 && !status; attempt++) {
-      try {
-        const res = await fetch(`${ONB_BACKEND_URL}/settings/status`);
-        if (res.ok) status = await res.json();
-      } catch (err) {
-        // Backend not up yet - retry below.
-      }
-      if (!status && attempt < 5) {
-        await new Promise((resolve) => setTimeout(resolve, 400));
-      }
-    }
-
-    if (status && status.faceitConfigured && status.steamConfigured) {
+    if (localStorage.getItem('cstracker-glacial-onboarding-complete') === 'true') {
+      localStorage.setItem("cstracker-setup-skipped", "true");
+      localStorage.removeItem("cstracker-local-demo-mode");
       hide();
+      window.activateTab?.("tab-overview");
       return true;
     }
-
-    goTo(0);
-    return new Promise((resolve) => {
-      resolveCompletion = resolve;
-    });
+    // Allow Skip setup to complete immediately even while the backend starts.
+    const completion = new Promise(resolve => { resolveCompletion = resolve; });
+    const checkStatus = async () => {
+      let status = null;
+      for (let attempt = 0; attempt < 6 && !status && resolveCompletion; attempt++) {
+        try {
+          const res = await fetch(`${ONB_BACKEND_URL}/settings/status`, { signal: AbortSignal.timeout(1500) });
+          if (res.ok) status = await res.json();
+        } catch { /* The backend may still be starting. */ }
+        if (!status && attempt < 5 && resolveCompletion) await new Promise(resolve => setTimeout(resolve, 400));
+      }
+      if (!resolveCompletion) return true;
+      if (status?.faceitConfigured && status?.steamConfigured) {
+        onbEls.continueStep1Btn.disabled=false;
+        onbEls.keysStatus.textContent='Your saved API keys are configured. Continue or replace them below.';
+      }
+      // Preserve a setup step the user opened while the backend was starting.
+      return completion;
+    };
+    return Promise.race([completion, checkStatus()]);
   }
 
   window.OnboardingWizard = { checkAndShow };

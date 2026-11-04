@@ -1,4 +1,4 @@
-import { Inject, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, Logger, NotFoundException, ServiceUnavailableException } from '@nestjs/common';
 import { CACHE_MANAGER } from '@nestjs/cache-manager';
 import type { Cache } from 'cache-manager';
 import { FaceitClient } from './clients/faceit.client';
@@ -385,6 +385,9 @@ export class PlayersService {
    */
   private async resolveFaceitPlayerOnly(rawInput: string): Promise<any | null> {
     const { identifier, forcedSource } = this.parseIdentifier(rawInput);
+    if (forcedSource !== 'steam' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(identifier)) {
+      return this.faceitClient.getPlayerById(identifier);
+    }
     if (forcedSource === 'steam') {
       const steamId = STEAM_ID_REGEX.test(identifier)
         ? identifier
@@ -418,7 +421,19 @@ export class PlayersService {
       faceitPlayer.player_id,
       FACEIT_MATCH_HISTORY_LIST_LIMIT,
     );
-    return buildMatchHistoryList(history, faceitPlayer.player_id);
+    const list = buildMatchHistoryList(history, faceitPlayer.player_id);
+    if (!Array.isArray(history?.items)) throw new ServiceUnavailableException('FACEIT history is unavailable. Keep the previous cached snapshot.');
+    const stats = await this.faceitClient.getRecentMatchStats(faceitPlayer.player_id);
+    const byId = new Map((stats?.items ?? []).map((item: any) => [item.stats?.['Match Id'], item.stats]));
+    return list.map(item => {
+      const values: any = byId.get(item.matchId);
+      const raw = values?.['FACEIT Rating'] ?? values?.['Faceit Rating'] ?? values?.['Rating'];
+      const rating = raw == null || raw === '' ? null : Number(raw);
+      const stat = (key: string) => values?.[key] == null || values[key] === '' || !Number.isFinite(Number(values[key])) ? null : Number(values[key]);
+      return { ...item, faceitRating: rating !== null && Number.isFinite(rating) ? rating : null,
+        map: typeof values?.['Map'] === 'string' ? values['Map'] : null,
+        kills: stat('Kills'), deaths: stat('Deaths'), source: 'faceit-api' as const, fetchedAt: new Date().toISOString() };
+    });
   }
 
   /**

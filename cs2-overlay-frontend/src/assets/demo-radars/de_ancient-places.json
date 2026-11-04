@@ -1,0 +1,254 @@
+[
+  {
+    "Name": "BombsiteA",
+    "EnglishName": "Bombsite A",
+    "MinBound": {
+      "X": -2144,
+      "Y": 336,
+      "Z": 66.0313
+    },
+    "MaxBound": {
+      "X": -875,
+      "Y": 1224,
+      "Z": 216
+    }
+  },
+  {
+    "Name": "CTSpawn",
+    "EnglishName": "CT Start",
+    "MinBound": {
+      "X": -864,
+      "Y": 984,
+      "Z": 24.800613
+    },
+    "MaxBound": {
+      "X": -80,
+      "Y": 1820,
+      "Z": 208.00002
+    }
+  },
+  {
+    "Name": "MainHall",
+    "EnglishName": "Main Hall",
+    "MinBound": {
+      "X": -2264,
+      "Y": -688,
+      "Z": 72.03131
+    },
+    "MaxBound": {
+      "X": -1680,
+      "Y": 312,
+      "Z": 200
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -800,
+      "Y": -2528,
+      "Z": -164.93001
+    },
+    "MaxBound": {
+      "X": -224,
+      "Y": -1536,
+      "Z": 7.9999847
+    }
+  },
+  {
+    "Name": "Middle",
+    "EnglishName": "Middle",
+    "MinBound": {
+      "X": -1056,
+      "Y": -875,
+      "Z": 32.0307
+    },
+    "MaxBound": {
+      "X": -136,
+      "Y": -8,
+      "Z": 232
+    }
+  },
+  {
+    "Name": "TopofMid",
+    "EnglishName": "Top of Mid",
+    "MinBound": {
+      "X": -625,
+      "Y": 0,
+      "Z": 112.16699
+    },
+    "MaxBound": {
+      "X": -400,
+      "Y": 248,
+      "Z": 288
+    }
+  },
+  {
+    "Name": "House",
+    "EnglishName": "House",
+    "MinBound": {
+      "X": -688,
+      "Y": 312,
+      "Z": 78.96521
+    },
+    "MaxBound": {
+      "X": -80,
+      "Y": 920,
+      "Z": 280
+    }
+  },
+  {
+    "Name": "Alley",
+    "EnglishName": "Alley",
+    "MinBound": {
+      "X": -64,
+      "Y": 408,
+      "Z": 64.00001
+    },
+    "MaxBound": {
+      "X": 1400,
+      "Y": 984,
+      "Z": 280
+    }
+  },
+  {
+    "Name": "Ramp",
+    "EnglishName": "Ramp",
+    "MinBound": {
+      "X": 1176,
+      "Y": -875.00006,
+      "Z": 1.2846985
+    },
+    "MaxBound": {
+      "X": 1375,
+      "Y": -232,
+      "Z": 240
+    }
+  },
+  {
+    "Name": "BombsiteB",
+    "EnglishName": "Bombsite B",
+    "MinBound": {
+      "X": 640,
+      "Y": -344,
+      "Z": 115.91301
+    },
+    "MaxBound": {
+      "X": 1400,
+      "Y": 736,
+      "Z": 288
+    }
+  },
+  {
+    "Name": "SideEntrance",
+    "EnglishName": "Side Entrance",
+    "MinBound": {
+      "X": 49.99997,
+      "Y": -632,
+      "Z": 144
+    },
+    "MaxBound": {
+      "X": 568.1477,
+      "Y": 296,
+      "Z": 312
+    }
+  },
+  {
+    "Name": "TSideUpper",
+    "EnglishName": "T Side Upper",
+    "MinBound": {
+      "X": -248,
+      "Y": -904,
+      "Z": 102.84699
+    },
+    "MaxBound": {
+      "X": 600.00006,
+      "Y": -675.00476,
+      "Z": 288
+    }
+  },
+  {
+    "Name": "TSideLower",
+    "EnglishName": "T Side Lower",
+    "MinBound": {
+      "X": 608,
+      "Y": -880,
+      "Z": 1.3354797
+    },
+    "MaxBound": {
+      "X": 1168,
+      "Y": -480,
+      "Z": 240.00002
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": 504,
+      "Y": -1625,
+      "Z": -66.5058
+    },
+    "MaxBound": {
+      "X": 1248,
+      "Y": -1048,
+      "Z": 144
+    }
+  },
+  {
+    "Name": "Water",
+    "EnglishName": "Water",
+    "MinBound": {
+      "X": 480.00006,
+      "Y": -2200,
+      "Z": -192
+    },
+    "MaxBound": {
+      "X": 784.00006,
+      "Y": -1640,
+      "Z": 39.99421
+    }
+  },
+  {
+    "Name": "Tunnel",
+    "EnglishName": "Tunnel",
+    "MinBound": {
+      "X": -192,
+      "Y": -1900,
+      "Z": -165.491
+    },
+    "MaxBound": {
+      "X": 456,
+      "Y": -1800,
+      "Z": -52.83481
+    }
+  },
+  {
+    "Name": "Outside",
+    "EnglishName": "Outside",
+    "MinBound": {
+      "X": -2150,
+      "Y": -1800,
+      "Z": -120
+    },
+    "MaxBound": {
+      "X": -824,
+      "Y": -736,
+      "Z": 200.00003
+    }
+  },
+  {
+    "Name": "SideHall",
+    "EnglishName": "Side Hall",
+    "MinBound": {
+      "X": -1624,
+      "Y": -384,
+      "Z": 72.03128
+    },
+    "MaxBound": {
+      "X": -984,
+      "Y": 475,
+      "Z": 248
+    }
+  }
+]

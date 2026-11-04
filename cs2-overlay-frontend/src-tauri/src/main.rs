@@ -23,19 +23,22 @@
 // The "windows_subsystem = windows" attribute ensures that in a release
 // build NO console/terminal window appears - the end user simply
 // double-clicks the compiled .exe to start it.
-#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(any(not(debug_assertions), feature = "bundled-backend"), windows_subsystem = "windows")]
+
+mod demo_analyzer;
 
 use std::io::Write;
 use std::sync::atomic::AtomicBool;
+#[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
 use std::sync::Mutex;
 use tauri::menu::{Menu, MenuItem, PredefinedMenuItem};
 use tauri::tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent};
 use tauri::{AppHandle, Listener, Manager};
 use tauri_plugin_dialog::DialogExt;
 
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
 use tauri_plugin_shell::ShellExt;
 
 /// Extremely simple, dependency-free file logger.
@@ -91,7 +94,7 @@ struct QuitOnCloseState(AtomicBool);
 /// (`quit_completely` Tauri command).
 fn quit_completely_impl(app: &AppHandle) {
     log_to_file("Quitting completely (all processes) - sidecar will be terminated.");
-    #[cfg(not(debug_assertions))]
+    #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
     {
         if let Some(state) = app.try_state::<SidecarHandle>() {
             if let Some(child) = state.0.lock().unwrap().take() {
@@ -108,6 +111,15 @@ fn quit_completely_impl(app: &AppHandle) {
 #[tauri::command]
 fn quit_completely(app: AppHandle) {
     quit_completely_impl(&app);
+}
+
+#[tauri::command]
+async fn prepare_for_update(app: AppHandle) {
+    #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
+    if let Some(state) = app.try_state::<SidecarHandle>() {
+        if let Some(child) = state.0.lock().unwrap().take() { let _ = child.kill(); }
+    }
+    std::thread::sleep(std::time::Duration::from_millis(500));
 }
 
 /// Tauri command backing the Control Panel's "Download GSI Config File"
@@ -235,7 +247,7 @@ async fn open_match_summary_window(app: AppHandle, match_id: String, identifier:
 /// Handle to the running backend sidecar process, so we can shut it down
 /// cleanly when the app closes (and avoid leaving an orphaned background
 /// process running).
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
 struct SidecarHandle(Mutex<Option<CommandChild>>);
 
 /// Starts the bundled backend binary as a background process.
@@ -250,7 +262,7 @@ struct SidecarHandle(Mutex<Option<CommandChild>>);
 /// to start, and the UI's own "backend unreachable" indicators (see
 /// launcher.js `checkBackend`/`loadSettingsStatus`) surface the problem
 /// to the user instead.
-#[cfg(not(debug_assertions))]
+#[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
 fn spawn_backend_sidecar(app: &tauri::App) {
     // Resolve a fixed, absolute, always-writable directory for the
     // backend's SQLite database file up front (see the long comment on
@@ -395,8 +407,19 @@ fn spawn_backend_sidecar(app: &tauri::App) {
     });
 }
 
+/// A WebView reload or tray restore must not replay a cold-start greeting.
+#[derive(Default)]
+struct WelcomeShown(AtomicBool);
+
+#[tauri::command]
+fn claim_startup_welcome(state: tauri::State<WelcomeShown>) -> bool {
+    !state.0.swap(true, std::sync::atomic::Ordering::SeqCst)
+}
+
 fn main() {
     tauri::Builder::default()
+        .manage(demo_analyzer::DemoAnalyzerState::default())
+        .manage(WelcomeShown::default())
         // Remembers window position/size across launches.
         .plugin(tauri_plugin_window_state::Builder::default().build())
         // Auto-updater - disabled by default (see tauri.conf.json
@@ -528,16 +551,28 @@ fn main() {
                 }
             });
 
-            #[cfg(not(debug_assertions))]
+            #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
             spawn_backend_sidecar(app);
 
             log_to_file("Tauri setup() completed successfully.");
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            claim_startup_welcome,
             quit_completely,
             save_gsi_config_file,
-            open_match_summary_window
+            open_match_summary_window,
+            demo_analyzer::open_demo_analyzer,
+            demo_analyzer::open_player_hq_demo,
+            demo_analyzer::get_cs2_demo_summary,
+            demo_analyzer::coach::generate_round_review,
+            demo_analyzer::coach::list_coach_models,
+            prepare_for_update,
+            demo_analyzer::library::list_past_demos,
+            demo_analyzer::library::player_hq_demo_metrics,
+            demo_analyzer::library::open_past_demo,
+            demo_analyzer::import_cs2_demo,
+            demo_analyzer::get_cs2_demo_round
         ])
         .on_window_event(|window, event| {
             // See `QuitOnCloseState` doc comment for the full rationale

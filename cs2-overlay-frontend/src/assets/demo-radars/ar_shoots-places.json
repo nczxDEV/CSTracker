@@ -1,0 +1,128 @@
+[
+  {
+    "Name": "CTSideLower",
+    "EnglishName": "CT Side Lower",
+    "MinBound": {
+      "X": -256,
+      "Y": 56,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": 512,
+      "Y": 508,
+      "Z": 88
+    }
+  },
+  {
+    "Name": "CTSideUpper",
+    "EnglishName": "CT Side Upper",
+    "MinBound": {
+      "X": -496,
+      "Y": 76,
+      "Z": 128
+    },
+    "MaxBound": {
+      "X": 856,
+      "Y": 508,
+      "Z": 304
+    }
+  },
+  {
+    "Name": "CTSpawn",
+    "EnglishName": "CT Start",
+    "MinBound": {
+      "X": -1020,
+      "Y": -564,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": 1008,
+      "Y": 28,
+      "Z": 316
+    }
+  },
+  {
+    "Name": "Ruins",
+    "EnglishName": "Ruins",
+    "MinBound": {
+      "X": -1015.9999,
+      "Y": -392,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": -620,
+      "Y": 230,
+      "Z": 280
+    }
+  },
+  {
+    "Name": "Mid",
+    "EnglishName": "Mid",
+    "MinBound": {
+      "X": -1015.99994,
+      "Y": 286.54968,
+      "Z": -1.5258789E-05
+    },
+    "MaxBound": {
+      "X": 1016,
+      "Y": 863.8944,
+      "Z": 280.00006
+    }
+  },
+  {
+    "Name": "TSideUpper",
+    "EnglishName": "T Side Upper",
+    "MinBound": {
+      "X": -856,
+      "Y": 644,
+      "Z": 128
+    },
+    "MaxBound": {
+      "X": 496,
+      "Y": 1076,
+      "Z": 304
+    }
+  },
+  {
+    "Name": "TSpawn",
+    "EnglishName": "T Start",
+    "MinBound": {
+      "X": -1008.00006,
+      "Y": 1124,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": 1019.99994,
+      "Y": 1716,
+      "Z": 316
+    }
+  },
+  {
+    "Name": "Hut",
+    "EnglishName": "Hut",
+    "MinBound": {
+      "X": 620.0001,
+      "Y": 922.0001,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": 1016,
+      "Y": 1544.0001,
+      "Z": 280
+    }
+  },
+  {
+    "Name": "TSideLower",
+    "EnglishName": "T Side Lower",
+    "MinBound": {
+      "X": -512,
+      "Y": 644,
+      "Z": 0
+    },
+    "MaxBound": {
+      "X": 256,
+      "Y": 1096,
+      "Z": 88
+    }
+  }
+]

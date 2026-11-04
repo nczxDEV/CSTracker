@@ -9,6 +9,13 @@
  */
 
 export interface FaceitMatchHistoryItem {
+  map?: string | null;
+  teammates?: string[];
+  kills?: number | null;
+  deaths?: number | null;
+  source?: 'faceit-api';
+  fetchedAt?: string;
+  faceitRating?: number | null;
   matchId: string;
   competitionName: string | null;
   /** ISO 8601, null if the raw FACEIT history item had no usable timestamp. */
@@ -39,6 +46,7 @@ export interface FaceitMatchHistoryItem {
  * per-match snapshot), so this is a permanent, not per-match, limitation.
  */
 export interface FaceitMatchSummaryPlayer {
+  faceitRating?: number | null;
   playerId: string;
   nickname: string;
   avatar: string | null;
