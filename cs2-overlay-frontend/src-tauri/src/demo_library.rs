@@ -77,6 +77,7 @@ fn load(root: &Path, id: &str) -> Result<ImportedDemo, String> {
     let mut demo: ImportedDemo = serde_json::from_slice(&data)
         .map_err(|_| "Cached replay is damaged. Import the original .dem again.".to_string())?;
     for round in &mut demo.rounds { restore_dead_player_names(round); }
+    refresh_score_rosters(&mut demo);
     Ok(demo)
 }
 pub(super) fn find_cached(root: &Path, path: &Path) -> Result<Option<ImportedDemo>, String> {
@@ -84,6 +85,8 @@ pub(super) fn find_cached(root: &Path, path: &Path) -> Result<Option<ImportedDem
     for entry in entries(root)? {
         if entry.source_key == key {
             if let Ok(demo) = load(root, &entry.id) {
+                // Explicit re-import upgrades old caches without modifying their files.
+                if demo.summary.player_stats.is_empty() { continue; }
                 return Ok(Some(demo));
             }
         }
@@ -176,7 +179,7 @@ fn hq_metrics(demo: &ImportedDemo, id: &str) -> serde_json::Value {
                 }));
             }
         }
-        serde_json::json!({"demoId": id, "map": demo.summary.map_name, "source": "local-demo", "rows": rows})
+        serde_json::json!({"demoId": id, "map": demo.summary.map_name, "source": "local-demo", "rows": rows, "playerStats": demo.summary.player_stats})
 }
 #[tauri::command]
 pub async fn open_past_demo(app: AppHandle, id: String) -> Result<DemoSummary, String> {

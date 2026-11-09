@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "CS Tracker",
-  "version": "0.4.7",
+  "version": "0.4.8",
   "identifier": "com.cstracker.app",
   "build": {
     "frontendDist": "../src"
@@ -30,22 +30,37 @@
     ],
     "security": {
       "csp": "default-src 'self'; connect-src 'self' http://127.0.0.1:3000 http://localhost:3000 ipc: http://ipc.localhost; img-src 'self' https: data:; style-src 'self' 'unsafe-inline'",
-      "capabilities": ["default", "demo-analyzer"]
+      "capabilities": [
+        "default",
+        "demo-analyzer",
+        "deathmatch"
+      ]
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico", "icons/icon.png", "icons/32x32.png", "icons/128x128.png", "icons/128x128@2x.png"],
-    "externalBin": ["binaries/cs2-overlay-backend"],
+    "icon": [
+      "icons/icon.ico",
+      "icons/icon.png",
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png"
+    ],
+    "externalBin": [
+      "binaries/cs2-overlay-backend"
+    ],
     "windows": {
+      "nsis": {
+        "installerHooks": "installer/hooks.nsh"
+      },
       "webviewInstallMode": {
         "type": "downloadBootstrapper"
       }
     },
     "createUpdaterArtifacts": true
   },
-    "plugins": {
+  "plugins": {
     "updater": {
       "active": true,
       "endpoints": [
@@ -57,5 +72,4 @@
       }
     }
   }
-
 }

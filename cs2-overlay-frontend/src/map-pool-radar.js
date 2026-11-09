@@ -1,7 +1,7 @@
 // CS Tracker - "Map Pool Radar" card (Player Summary tab).
 //
 // Shows a spider/radar chart comparing the player's per-map win rate (or
-// Rating/K-D, via the toggle pills) against a baseline, plus a
+// K/D, via the toggle pills) against a baseline, plus a
 // per-map breakdown table - using small map icon images (instead of
 // plain text map names, per the approved mockup) wherever official art
 // is available, falling back to a 2-letter initials badge otherwise.
@@ -38,7 +38,7 @@
     dust2: "assets/map-icons/dust2.png",
   };
 
-  let currentMetric = "winrate"; // 'winrate' | 'rating' | 'kd'
+  let currentMetric = "winrate"; // 'winrate' | 'kd'
   let currentMapPool = null;
   let currentNickname = "";
 
@@ -87,14 +87,12 @@
   function metricValue(map, metric) {
     if (metric === "winrate") return map.winRatePercent;
     if (metric === "kd") return map.avgKd !== null ? map.avgKd * 50 : null; // ~1.0 KD -> 50 on the radar scale
-    if (metric === "rating") return map.rating !== null ? map.rating * 50 : null;
     return null;
   }
 
   function metricDisplay(map, metric) {
     if (metric === "winrate") return map.winRatePercent !== null ? `${map.winRatePercent}%` : "N/A";
     if (metric === "kd") return map.avgKd !== null ? map.avgKd.toFixed(2) : "N/A";
-    if (metric === "rating") return map.rating !== null ? `${map.rating.toFixed(2)} rtg` : "N/A";
     return "N/A";
   }
 
@@ -109,14 +107,14 @@
         <div>
           <div class="name-wrap">
             <div class="name">${m.displayName}</div>
-            <div class="played">${m.matches ?? 0} meccs</div>
+            <div class="played">${m.matches ?? "N/A"} matches</div>
           </div>
           <div class="mp-bar-track">
-            <div class="mp-bar-fill" style="width:${Math.max(2, wr)}%; background:${barColor(wr)};"></div>
+            <div class="mp-bar-fill" style="width:${Math.max(0, Math.min(100, wr))}%; background:${barColor(wr)};"></div>
           </div>
         </div>
         <div class="wr ${wrClass(wr)}">${m.winRatePercent !== null ? m.winRatePercent + "%" : "N/A"}</div>
-        <div class="rating">${metricDisplay(m, "rating")}</div>
+        <div class="rating">${metricDisplay(m, "kd")} K/D</div>
       </div>`;
       })
       .join("");
@@ -132,7 +130,7 @@
     const n = maps.length;
     const angleFor = (i) => -Math.PI / 2 + (i / n) * Math.PI * 2;
 
-    const scale = (v) => Math.max(0.05, Math.min(1, (v ?? 0) / 100)) * maxR;
+    const scale = (v) => Math.max(0, Math.min(1, (v ?? 0) / 100)) * maxR;
 
     const ptsFor = (values) =>
       values.map((v, i) => {
@@ -142,13 +140,11 @@
       });
 
     const playerValues = maps.map((m) => metricValue(m, metric));
-    const avgValues = maps.map((m) => (metric === "winrate" ? m.levelAvgWinRate : metricValue(m, metric)));
 
     const playerPts = ptsFor(playerValues);
-    const avgPts = ptsFor(avgValues);
+    const complete = playerValues.every(Number.isFinite);
 
     const playerPath = playerPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ") + " Z";
-    const avgPath = avgPts.map((p, i) => `${i === 0 ? "M" : "L"} ${p[0].toFixed(1)} ${p[1].toFixed(1)}`).join(" ") + " Z";
 
     let rings = "";
     [0.25, 0.5, 0.75, 1].forEach((frac) => {
@@ -208,9 +204,8 @@
       ${rings}
       ${spokes}
       ${tickLabel}
-      <path d="${avgPath}" fill="rgba(150,150,150,0.06)" stroke="var(--text-muted)" stroke-width="1.4" stroke-dasharray="4 3" opacity="0.8" />
-      <path d="${playerPath}" fill="var(--accent-purple)" fill-opacity="0.22" stroke="var(--accent-purple)" stroke-width="2.2" stroke-linejoin="round" />
-      ${playerPts.map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="var(--accent-purple)" stroke="#0d1015" stroke-width="1" />`).join("")}
+      ${complete ? `<path d="${playerPath}" fill="var(--accent-purple)" fill-opacity="0.22" stroke="var(--accent-purple)" stroke-width="2.2" stroke-linejoin="round" />` : ""}
+      ${playerPts.filter((_, i) => Number.isFinite(playerValues[i])).map((p) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="3.2" fill="var(--accent-purple)" stroke="#0d1015" stroke-width="1" />`).join("")}
       ${iconUses}
     </svg>`;
 
@@ -238,7 +233,7 @@
         ? `Your strongest map right now is <b class="best">${best.displayName}</b> (${best.winRatePercent}% WR),
            and your weakest is <b class="worst">${worst.displayName}</b> (${worst.winRatePercent}% WR) -
            might be worth banning it or practicing it in MM.`
-        : `Play a few more matches on at least 3 different maps to see which is your strongest/weakest map.`;
+        : `Play at least 3 matches on a map to see which is your strongest/weakest map.`;
 
     root.innerHTML = `
       <div class="mp-hero-banner">
@@ -250,7 +245,6 @@
         <div class="mp-hero-sub">${subLine}</div>
         <div class="mp-toggle-row">
           <button type="button" class="mp-toggle" data-metric="winrate">Winrate</button>
-          <button type="button" class="mp-toggle" data-metric="rating">Rating</button>
           <button type="button" class="mp-toggle" data-metric="kd">KD</button>
         </div>
       </div>
@@ -260,7 +254,6 @@
           Map Performance
           <span class="mp-legend">
             <span><i style="background:var(--accent-purple)"></i>You</span>
-            <span><i style="background:var(--text-muted); opacity:0.6;"></i>Level average*</span>
           </span>
         </h2>
         <div class="mp-radar-wrap" id="mp-radar"></div>
@@ -274,12 +267,11 @@
       <div class="mp-card">
         <h2>What does this show?</h2>
         <div class="mp-note">
-          The radar compares your <b>win rate</b> (or the other two metrics via the Rating/KD toggle)
-          per map against the "Level average*" line. The further the purple shape is from the center on a
-          given axis, the better you perform on that map.<br />
-          <b>* Level average note:</b> this is currently a neutral 50% baseline, NOT the real average of
-          players at your own FACEIT level - the official FACEIT API doesn't publish that data. A real
-          version would require this app to collect and bucket users' own map stats by level over time.
+          Source: FACEIT map statistics across the matches returned by FACEIT, not a selected date range.
+          Win rate is the percentage of wins; K/D is the average kill/death ratio supplied for each map.
+          Match counts appear beside each map. No official rating or same-level player average is supplied.
+          The K/D radar scale runs from 0 to 2; higher values are capped visually, while the table shows the actual value.
+          Best/worst map comparisons require at least three matches on that map. Small samples are less representative. Missing values are omitted from the radar; its filled shape appears only when all map values are available.
         </div>
       </div>`;
 

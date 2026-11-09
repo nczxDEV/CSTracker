@@ -9,6 +9,9 @@
  */
 
 export interface FaceitMatchHistoryItem {
+  assists?: number | null;
+  adr?: number | null;
+  roundsPlayed?: number | null;
   map?: string | null;
   teammates?: string[];
   kills?: number | null;
@@ -30,22 +33,34 @@ export interface FaceitMatchHistoryItem {
   opponentTeamName: string | null;
 }
 
-/**
- * A single player's line in the match summary roster table.
- *
- * TRANSPARENCY NOTE (matches this project's "never fabricate a stat"
- * principle - see map-pool.util.ts's LEVEL_AVG_PLACEHOLDER doc comment
- * for the established precedent): `adr` and `kast` are `null` whenever
- * the official FACEIT `/matches/{id}/stats` response doesn't actually
- * include that field for this match/game mode - see
- * `FaceitMatchSummary.adrAvailable`/`kastAvailable` for the per-summary
- * flags the frontend uses to show an honest "N/A" instead of a made-up
- * number. `eloChange` is ALWAYS null - FACEIT's public Data API does not
- * expose a per-match ELO delta on any documented endpoint (ELO is only
- * ever available as the player's CURRENT value, not a historical
- * per-match snapshot), so this is a permanent, not per-match, limitation.
- */
+/** Provider-supplied match statistics. Missing fields remain null/absent, never estimated. */
 export interface FaceitMatchSummaryPlayer {
+  steamId?: string | null;
+  elo?: number | null;
+  kast?: number | null;
+  damage?: number | null;
+  headshots?: number | null;
+  spottedAccuracy?: number | null;
+  swing?: number | null;
+  firstKills?: number | null;
+  firstDeaths?: number | null;
+  tradeKills?: number | null;
+  tradedDeaths?: number | null;
+  enemiesFlashed?: number | null;
+  flashAssists?: number | null;
+  utilityDamage?: number | null;
+  clutchWins?: number | null;
+  doubleKills?: number | null;
+  tripleKills?: number | null;
+  quadKills?: number | null;
+  aces?: number | null;
+  roundsPlayed?: number | null;
+  utilityCount?: number | null;
+  flashCount?: number | null;
+  entryCount?: number | null;
+  entryWins?: number | null;
+  oneVOneWins?: number | null;
+  oneVTwoWins?: number | null;
   faceitRating?: number | null;
   playerId: string;
   nickname: string;
@@ -63,7 +78,7 @@ export interface FaceitMatchSummaryPlayer {
   /** Average Damage per Round - null (see class doc comment) if FACEIT didn't provide it for this match. */
   adr: number | null;
   mvps: number | null;
-  /** True for the single player with this match's highest MVP count (ties broken by highest kills) - drives the "MVP" star/highlight row in the summary UI. */
+  /** True for players tied at the highest supplied FACEIT Rating - drives the "MVP" star/highlight row in the summary UI. */
   isMatchMvp: boolean;
 }
 
@@ -89,6 +104,9 @@ export interface FaceitMatchSummary {
   mvpNickname: string | null;
   /** Whether ANY player in this match had a non-null `adr` - lets the UI show one honest "ADR not available for this match" notice instead of per-row "N/A" clutter when the whole match lacks it. */
   adrAvailable: boolean;
-  /** Always false - see FaceitMatchSummaryPlayer doc comment; kept as an explicit field (rather than the frontend just assuming) so the UI's "why is this N/A" tooltip has a single source of truth. */
-  kastAvailable: false;
+  /** Whether any player has a provider-supplied KAST value. */
+  kastAvailable: boolean;
+  schemaVersion?: number;
+  fetchedAt?: string;
+  source?: string;
 }

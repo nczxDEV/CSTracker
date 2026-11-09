@@ -1,0 +1,1 @@
+document.getElementById('open-deathmatch').onclick=async()=>{try{document.getElementById('launcher-menu').open=false;await window.__TAURI__.core.invoke('open_deathmatch');}catch(e){alert(String(e));}};

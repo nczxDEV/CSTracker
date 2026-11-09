@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CS Tracker · Deathmatch Finder</title>
+  <link rel="stylesheet" href="deathmatch.css">
+</head>
+<body>
+<canvas id="dm-background" aria-hidden="true"></canvas>
+<div id="dm-backdrop" aria-hidden="true"></div>
+<main class="app">
+  <nav class="tabs" aria-label="CS Tracker">
+    <span>CS TRACKER / PLAY</span><span class="on" aria-current="page">Deathmatch Finder</span>
+  </nav>
+  <section class="quick" aria-labelledby="quick-title">
+    <div class="badge" aria-hidden="true"><span>DM</span></div>
+    <div><h1 id="quick-title">Find me a deathmatch</h1><p id="status" role="status">Loading the server list…</p></div>
+    <button class="go" id="find" disabled>Quick join</button>
+  </section>
+  <div class="bar">
+    <div class="chips" role="group" aria-label="Providers">
+      <button class="chip" data-provider="" aria-pressed="true" type="button">All servers</button>
+      <button class="chip warmup" data-provider="warmup" aria-pressed="false" type="button"><i></i>WarmupServer</button>
+      <button class="chip cyber" data-provider="cybershoke" aria-pressed="false" type="button"><i></i>CYBERSHOKE</button>
+      <button class="chip pracc" data-provider="pracc" aria-pressed="false" type="button"><i></i>PRACC</button>
+    </div>
+    <div class="live" id="freshness"><i></i><span id="ago">Waiting for provider</span></div>
+  </div>
+  <div class="filters" aria-label="Server filters">
+    <label>Region <select id="region"><option value="">All regions</option><option selected>Europe</option><option>North America</option><option>South America</option><option>Asia</option><option>Australia</option><option>South Africa</option></select></label>
+    <label>Map <select id="map"><option value="">All maps</option></select></label>
+    <label>Server type <select id="mode"><option value="">All types</option><option value="guns">Guns / All weapons</option><option value="cfg">Multi-CFG</option><option value="pistol">Pistol</option><option value="hs">Headshot</option><option value="awp">AWP</option><option value="aim">Aim</option></select></label>
+    <label>Mode / name <input id="search" type="search" placeholder="Pistol, rifles…"></label>
+    <label>Sort <select id="sort"><option value="best">Best match</option><option value="ping">Lowest ping</option><option value="players">Most players</option></select></label>
+    <label>Max ping <input id="ping" type="number" min="10" max="500" value="80"></label>
+    <label>Free slots <input id="free" type="number" min="1" max="20" value="2"></label>
+    <label><input id="favorites" type="checkbox"> Favorites only</label>
+    <button class="action" id="refresh">Refresh</button>
+  </div>
+  <div class="grid" id="grid" aria-label="Deathmatch servers"></div>
+  <p class="note">Ping updates automatically for matching servers. Quick join rechecks capacity. Reserved VIP slots may affect access. FACEIT levels are shown only when supplied; PRACC currently supplies names only.</p>
+</main>
+<dialog id="details" aria-labelledby="name">
+  <form method="dialog"><button class="action close" aria-label="Close details">Close ×</button></form>
+  <span class="prov" id="detail-provider"></span>
+  <h2 id="name"></h2><p class="map" id="meta"></p>
+  <div id="faceit-average" class="faceit-average"></div>
+  <p id="player-note" class="note"></p>
+  <div id="players"></div>
+  <footer><button class="join" id="join">Join server</button><span id="join-status" role="status"></span></footer>
+</dialog>
+<script src="settings-store.js"></script>
+<script src="matrix-bg.js"></script>
+<script src="galaxy-bg.js"></script>
+<script src="cyberpunk-bg.js"></script>
+<script src="teamspirit-bg.js"></script>
+<script src="deathmatch-model.js"></script>
+<script src="deathmatch.js"></script>
+</body>
+</html>

@@ -103,7 +103,7 @@ describe('buildMatchSummary', () => {
         nickname: 'Nemesis Five',
         team_id: 'team-a',
         roster: [
-          { player_id: 'p1', nickname: 'RustyBlade', avatar: 'a.png', game_skill_level: 10 },
+          { player_id: 'p1', nickname: 'RustyBlade', avatar: 'a.png', game_skill_level: 10, game_player_id: '76561198000000001' },
           { player_id: 'p2', nickname: 'Kvasz_ONE', avatar: 'b.png', game_skill_level: 9 },
         ],
       },
@@ -163,6 +163,14 @@ describe('buildMatchSummary', () => {
     expect(buildMatchSummary({}, null, 'match-1')).toBeNull();
   });
 
+  it('preserves roster Steam IDs as strings for demo identity matching', () => {
+    for (const stats of [matchStats, null]) {
+      const summary = buildMatchSummary(matchDetails, stats, 'match-1')!;
+      expect(summary.teamA.players.find(p => p.playerId === 'p1')?.steamId).toBe('76561198000000001');
+      expect(summary.teamA.players.find(p => p.playerId === 'p2')?.steamId).toBeNull();
+    }
+  });
+
   it('builds both teams with score, win/lose, map, and duration', () => {
     const summary = buildMatchSummary(matchDetails, matchStats, 'match-1');
     expect(summary).not.toBeNull();
@@ -189,11 +197,11 @@ describe('buildMatchSummary', () => {
     });
   });
 
-  it('flags the single match MVP (highest MVPs, ties by kills) across both teams', () => {
+  it('does not invent a rating MVP from kills or round MVPs', () => {
     const summary = buildMatchSummary(matchDetails, matchStats, 'match-1')!;
-    expect(summary.mvpNickname).toBe('RustyBlade');
+    expect(summary.mvpNickname).toBeNull();
     const all = [...summary.teamA.players, ...summary.teamB.players];
-    expect(all.filter((p) => p.isMatchMvp)).toHaveLength(1);
+    expect(all.filter((p) => p.isMatchMvp)).toHaveLength(0);
   });
 
   it('keeps official rating values and does not estimate missing ratings', () => {
@@ -205,7 +213,24 @@ describe('buildMatchSummary', () => {
     expect(players.filter(p => p.faceitRating === null).length).toBe(players.length - 1);
   });
 
-  it('reports adrAvailable=true when at least one player has an ADR value, and kastAvailable is always false', () => {
+  it('selects the highest supplied FACEIT rating across teams and keeps ties', () => {
+    const input = JSON.parse(JSON.stringify(matchStats));
+    input.rounds[0].teams[0].players[0].player_stats['FACEIT Rating'] = '1.1';
+    input.rounds[0].teams[1].players[0].player_stats['FACEIT Rating'] = '1.6';
+    input.rounds[0].teams[1].players[1].player_stats['FACEIT Rating'] = '1.6';
+    const result = buildMatchSummary(matchDetails, input, 'match-1')!;
+    expect(result.teamA.players.every(p => !p.isMatchMvp)).toBe(true);
+    expect(result.teamB.players.every(p => p.isMatchMvp)).toBe(true);
+  });
+  it('extracts provided advanced metrics and rejects non-finite values', () => {
+    const input = JSON.parse(JSON.stringify(matchStats));
+    Object.assign(input.rounds[0].teams[0].players[0].player_stats, { KAST: '72.7%', '1v1Wins': '2', 'First Kills': '4', 'Utility Damage': '150', 'Rating': 'Infinity' });
+    const result = buildMatchSummary(matchDetails, input, 'match-1')!;
+    expect(result.teamA.players[0]).toMatchObject({ kast:72.7, oneVOneWins:2, firstKills:4, utilityDamage:150, faceitRating:null });
+    expect(result.kastAvailable).toBe(true);
+  });
+
+  it('reports adrAvailable=true when at least one player has an ADR value, and KAST is unavailable when absent', () => {
     const summary = buildMatchSummary(matchDetails, matchStats, 'match-1')!;
     expect(summary.adrAvailable).toBe(true);
     expect(summary.kastAvailable).toBe(false);

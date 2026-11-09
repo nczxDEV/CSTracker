@@ -166,7 +166,7 @@ nickname entry. **Steam login needs zero setup** (Steam's OpenID 2.0
 "Sign in through Steam" requires no app registration at all). **FACEIT
 login requires a one-time OAuth2 app registration**, completed once by
 whoever builds/maintains this app (not by each end user) - the
-credentials then ship baked into the app's own `.env`.
+configuration is runtime-only; secrets must never be embedded in a desktop executable.
 
 ### 1. Create a FACEIT OAuth2 App + Client
 
@@ -249,30 +249,12 @@ FACEIT_OAUTH_REDIRECT_URI=<the https:// redirect URI you registered - option A o
 picks these up directly from `.env` - no extra step needed, just make
 sure the file has real values before starting the backend.
 
-**Packaged/release build**: the compiled sidecar binary does NOT ship
-with a `.env` file next to it (only the executable itself is bundled -
-see `tauri.conf.json` -> `bundle.externalBin`), so these three values
-are instead baked into the **Tauri (Rust) side** at compile time -
-`cs2-overlay-frontend/src-tauri/build.rs` automatically reads
-`cs2-overlay-backend/.env` while compiling and embeds these three keys
-into the built `.exe`, which then passes them to the sidecar process as
-real environment variables on every launch (see `main.rs`
-`spawn_backend_sidecar()`). Practically, this means:
-
-1. Fill in the three `FACEIT_OAUTH_*` values in
-   `cs2-overlay-backend/.env` (as above) BEFORE running the frontend
-   build - not after.
-2. Rebuild the sidecar (`npm run build:sidecar` in
-   `cs2-overlay-backend`) so the backend logic itself is up to date.
-3. Rebuild the frontend (`npm run tauri build` in
-   `cs2-overlay-frontend`) - this is the step that actually re-reads
-   `.env` and bakes the fresh values in. **If you only change `.env` and
-   re-run step 2 without also rebuilding the frontend, the OLD values
-   (or none, if this is the first time) stay baked into the existing
-   `.exe`** - the Account tab's "Login with FACEIT" button showing "not
-   configured on this build" after a rebuild almost always means this
-   step was skipped or `.env` didn't have real values in it yet when the
-   frontend was last built.
+**Packaged/release build**: no `.env` or OAuth client secret is embedded in the
+Rust executable. Optional OAuth configuration must be supplied through the local
+process environment at runtime. Ordinary users use Steam sign-in and the linked
+FACEIT profile lookup; that flow does not require a FACEIT OAuth client.
+A shared confidential OAuth client secret must stay on a hosted service, not in
+a distributed desktop build. Do not publish an installer containing it.
 
 The Account tab's "Login with FACEIT" button (and the `/auth/faceit/login`
 endpoint directly) shows a clear "not configured" error if any of the

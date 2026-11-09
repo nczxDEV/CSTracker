@@ -28,8 +28,9 @@ import {
 
 function toNumberOrNull(value: unknown): number | null {
   if (value === null || value === undefined || value === '') return null;
-  const num = Number(value);
-  return Number.isNaN(num) ? null : num;
+  if (typeof value === 'boolean') return null;
+  const num = Number(typeof value === 'string' ? value.trim().replace(/%$/, '') : value);
+  return Number.isFinite(num) ? num : null;
 }
 
 /**
@@ -137,10 +138,36 @@ function matchStatsTeamToFaction(statsTeam: any, matchDetails: any): 'faction1' 
   return overlapF1 >= overlapF2 ? 'faction1' : 'faction2';
 }
 
-function buildPlayerFromStats(statsPlayer: any, rosterPlayer: any | undefined): FaceitMatchSummaryPlayer {
+function buildPlayerFromStats(statsPlayer: any, rosterPlayer: any | undefined, roundsPlayed: number | null): FaceitMatchSummaryPlayer {
   const stats = statsPlayer?.player_stats ?? {};
   return {
+    roundsPlayed,
+    utilityCount: extractStatNumber(stats, ['Utility Count']),
+    flashCount: extractStatNumber(stats, ['Flash Count']),
+    entryCount: extractStatNumber(stats, ['Entry Count']),
+    entryWins: extractStatNumber(stats, ['Entry Wins']),
+    oneVOneWins: extractStatNumber(stats, ['1v1Wins']),
+    oneVTwoWins: extractStatNumber(stats, ['1v2Wins']),
+    elo: toNumberOrNull(rosterPlayer?.faceit_elo),
+    kast: extractStatNumber(stats, ['KAST', 'KAST %']),
+    damage: extractStatNumber(stats, ['Damage', 'Total Damage']),
+    headshots: extractStatNumber(stats, ['Headshots']),
+    spottedAccuracy: extractStatNumber(stats, ['Spotted Accuracy', 'Spotted Accuracy %']),
+    swing: extractStatNumber(stats, ['Swing', 'Swing %']),
+    firstKills: extractStatNumber(stats, ['First Kills', 'Entry Kills']),
+    firstDeaths: extractStatNumber(stats, ['First Deaths', 'Entry Deaths']),
+    tradeKills: extractStatNumber(stats, ['Trade Kills']),
+    tradedDeaths: extractStatNumber(stats, ['Traded Deaths']),
+    enemiesFlashed: extractStatNumber(stats, ['Enemies Flashed']),
+    flashAssists: extractStatNumber(stats, ['Flash Assists']),
+    utilityDamage: extractStatNumber(stats, ['Utility Damage']),
+    clutchWins: extractStatNumber(stats, ['Clutch Wins', '1vX Wins']),
+    doubleKills: extractStatNumber(stats, ['Double Kills']),
+    tripleKills: extractStatNumber(stats, ['Triple Kills']),
+    quadKills: extractStatNumber(stats, ['Quadro Kills', 'Quad Kills']),
+    aces: extractStatNumber(stats, ['Penta Kills', 'Aces']),
     faceitRating: extractStatNumber(stats, ['FACEIT Rating', 'Faceit Rating', 'Rating']),
+    steamId: typeof rosterPlayer?.game_player_id === 'string' && /^\d{17}$/.test(rosterPlayer.game_player_id) ? rosterPlayer.game_player_id : null,
     playerId: statsPlayer?.player_id ?? rosterPlayer?.player_id ?? '',
     nickname: statsPlayer?.nickname ?? rosterPlayer?.nickname ?? 'Unknown',
     avatar: rosterPlayer?.avatar ?? null,
@@ -160,6 +187,7 @@ function buildPlayerFromStats(statsPlayer: any, rosterPlayer: any | undefined): 
 /** Fallback lineup when `/matches/{id}/stats` has no data yet for this match (e.g. not finished, or the stats endpoint simply returned nothing) - shows a real team roster with every performance stat honestly null instead of an empty team section. */
 function buildPlayerFromRosterOnly(rosterPlayer: any): FaceitMatchSummaryPlayer {
   return {
+    steamId: typeof rosterPlayer?.game_player_id === 'string' && /^\d{17}$/.test(rosterPlayer.game_player_id) ? rosterPlayer.game_player_id : null,
     playerId: rosterPlayer?.player_id ?? '',
     nickname: rosterPlayer?.nickname ?? 'Unknown',
     avatar: rosterPlayer?.avatar ?? null,
@@ -176,20 +204,13 @@ function buildPlayerFromRosterOnly(rosterPlayer: any): FaceitMatchSummaryPlayer 
   };
 }
 
-/** Flags the single best "MVP of the match" player (highest MVPs, ties broken by kills) across both teams - drives the summary UI's MVP star/highlight row. No-op if neither MVPs nor kills are available for anyone. */
+/** Selects the highest supplied rating, preserving ties; never substitutes kills. */
 function markMatchMvp(teamA: FaceitMatchSummaryPlayer[], teamB: FaceitMatchSummaryPlayer[]): void {
   const all = [...teamA, ...teamB];
-  const withMvps = all.filter((p) => p.mvps !== null);
-  const pool = withMvps.length > 0 ? withMvps : all.filter((p) => p.kills !== null);
-  if (pool.length === 0) return;
-
-  const best = pool.reduce((a, b) => {
-    const aMvps = a.mvps ?? -1;
-    const bMvps = b.mvps ?? -1;
-    if (bMvps !== aMvps) return bMvps > aMvps ? b : a;
-    return (b.kills ?? -1) > (a.kills ?? -1) ? b : a;
-  });
-  best.isMatchMvp = true;
+  const rated = all.filter(p => typeof p.faceitRating === 'number' && Number.isFinite(p.faceitRating));
+  if (!rated.length) return;
+  const best = Math.max(...rated.map(p => p.faceitRating as number));
+  rated.filter(p => p.faceitRating === best).forEach(p => { p.isMatchMvp = true; });
 }
 
 /**
@@ -226,7 +247,7 @@ export function buildMatchSummary(matchDetails: any, matchStats: any, matchId: s
 
     const players: FaceitMatchSummaryPlayer[] =
       statsTeam?.players?.length > 0
-        ? statsTeam.players.map((sp: any) => buildPlayerFromStats(sp, rosterById.get(sp?.player_id)))
+        ? statsTeam.players.map((sp: any) => buildPlayerFromStats(sp, rosterById.get(sp?.player_id), extractStatNumber(statsRound?.round_stats, ['Rounds'])))
         : (detailsFaction?.roster ?? []).map((rp: any) => buildPlayerFromRosterOnly(rp));
 
     const levels = players.map((p) => p.skillLevel).filter((v): v is number => v !== null);
@@ -269,6 +290,9 @@ export function buildMatchSummary(matchDetails: any, matchStats: any, matchId: s
     teamB,
     mvpNickname: mvpPlayer?.nickname ?? null,
     adrAvailable,
-    kastAvailable: false,
+    kastAvailable: allPlayers.some(p => p.kast != null),
+    schemaVersion: 2,
+    source: 'FACEIT Data API',
+    fetchedAt: new Date().toISOString(),
   };
 }

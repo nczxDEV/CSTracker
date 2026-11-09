@@ -33,16 +33,7 @@ const FACEIT_LEVEL_THRESHOLDS: FaceitLevelThreshold[] = [
   { level: 1, min: 100 },
 ];
 
-/**
- * "ELO Forecast" feature - persists a snapshot of a player's FACEIT ELO
- * every time their Player Summary is looked up (see PlayersController
- * `eloForecast()`), IF it differs from the last stored value, and runs a
- * simple (unweighted) linear regression over the stored history to
- * estimate "how many matches until the next level".
- *
- * SQLite-based (DatabaseModule), matching the existing match-history/
- * saved-players persistence pattern in this codebase.
- */
+/** Stores observed FACEIT profile ELO changes, never per-match predictions. */
 @Injectable()
 export class EloHistoryService {
   private readonly logger = new Logger(EloHistoryService.name);
@@ -83,11 +74,7 @@ export class EloHistoryService {
     return rows.map((row) => ({ elo: row.elo, recordedAt: row.recorded_at }));
   }
 
-  /**
-   * Builds the full forecast payload: current ELO, next-level target,
-   * simple linear-regression trend, volatility, and an estimated number
-   * of matches until the target is reached.
-   */
+  /** Returns observed history and distance to the next level. */
   buildForecast(identifier: string, currentElo: number | null): EloForecast {
     const history = this.history(identifier);
     const values = history.map((h) => h.elo);
@@ -101,25 +88,6 @@ export class EloHistoryService {
     const eloRemaining =
       targetElo !== null && effectiveCurrent !== null ? Math.max(0, targetElo - effectiveCurrent) : null;
 
-    let avgEloChangePerMatch: number | null = null;
-    let volatility: number | null = null;
-    let matchesToTarget: number | null = null;
-
-    if (n >= 2) {
-      const { slope } = linearRegression(values);
-      avgEloChangePerMatch = Math.round(slope * 100) / 100;
-
-      const deltas: number[] = [];
-      for (let i = 1; i < n; i++) deltas.push(values[i] - values[i - 1]);
-      volatility = Math.round(stdDev(deltas) * 10) / 10;
-
-      if (slope > 0 && targetElo !== null && effectiveCurrent !== null && effectiveCurrent < targetElo) {
-        matchesToTarget = Math.ceil((targetElo - effectiveCurrent) / slope);
-      }
-    }
-
-    const confidence: EloForecast['confidence'] = n < 5 ? 'low' : n < 15 ? 'medium' : 'high';
-
     return {
       identifier: identifier.trim().toLowerCase(),
       currentElo: effectiveCurrent,
@@ -128,10 +96,14 @@ export class EloHistoryService {
       targetLevel,
       targetElo,
       eloRemaining,
-      avgEloChangePerMatch,
-      volatility,
-      matchesToTarget,
-      confidence,
+      observedChange: n >= 2 ? values[n - 1] - values[0] : null,
+      source: 'FACEIT profile snapshots',
+      periodStart: history[0]?.recordedAt ?? null,
+      periodEnd: history[n - 1]?.recordedAt ?? null,
+      avgEloChangePerMatch: null,
+      volatility: null,
+      matchesToTarget: null,
+      confidence: 'low',
     };
   }
 
@@ -160,28 +132,4 @@ function nextLevelTarget(currentElo: number): FaceitLevelThreshold | null {
     if (threshold.min > currentElo) return threshold;
   }
   return null;
-}
-
-/** Simple (unweighted) linear regression y = intercept + slope*x, where x is the 0-based index into `ys`. */
-function linearRegression(ys: number[]): { slope: number; intercept: number } {
-  const n = ys.length;
-  const xs = ys.map((_, i) => i);
-  const xMean = xs.reduce((a, b) => a + b, 0) / n;
-  const yMean = ys.reduce((a, b) => a + b, 0) / n;
-  let num = 0;
-  let den = 0;
-  for (let i = 0; i < n; i++) {
-    num += (xs[i] - xMean) * (ys[i] - yMean);
-    den += (xs[i] - xMean) ** 2;
-  }
-  const slope = den === 0 ? 0 : num / den;
-  const intercept = yMean - slope * xMean;
-  return { slope, intercept };
-}
-
-function stdDev(values: number[]): number {
-  if (values.length === 0) return 0;
-  const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance = values.reduce((sum, v) => sum + (v - mean) ** 2, 0) / values.length;
-  return Math.sqrt(variance);
 }

@@ -35,6 +35,8 @@ pub struct ImportedDemo {
 #[serde(rename_all = "camelCase")]
 pub struct DemoSummary {
     #[serde(default)]
+    player_stats: Vec<serde_json::Value>,
+    #[serde(default)]
     library_id: Option<String>,
     file_name: String,
     map_name: String,
@@ -45,6 +47,10 @@ pub struct DemoSummary {
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RoundSummary {
+    #[serde(default)]
+    ct_player_ids: Vec<String>,
+    #[serde(default)]
+    t_player_ids: Vec<String>,
     number: i32,
     start_tick: i32,
     end_tick: i32,
@@ -185,6 +191,8 @@ fn parse_demo_with_progress(path: &Path, progress: impl Fn(&str)) -> Result<Impo
             previous_end = round.end_tick.saturating_add(1);
             RoundReplay {
                 summary: RoundSummary {
+                    ct_player_ids: Vec::new(),
+                    t_player_ids: Vec::new(),
                     number: round.round_num,
                     start_tick: start,
                     end_tick: round.end_tick.max(start),
@@ -443,7 +451,17 @@ fn parse_demo_with_progress(path: &Path, progress: impl Fn(&str)) -> Result<Impo
         }
         round.events.sort_by_key(|event| event.tick);
     }
+    progress("Calculating match statistics…");
+    let player_stats = parser.player_stats(true)
+        .map_err(|e| format!("Could not calculate match statistics: {e}"))?
+        .into_iter().map(|player| {
+            let mut value = serde_json::to_value(&player).unwrap_or_default();
+            // Steam IDs exceed JavaScript's safe integer range.
+            value["steamid"] = serde_json::Value::String(player.steamid.to_string());
+            value
+        }).collect();
     let summary = DemoSummary {
+        player_stats,
         library_id: None,
         file_name: path
             .file_name()
@@ -454,7 +472,20 @@ fn parse_demo_with_progress(path: &Path, progress: impl Fn(&str)) -> Result<Impo
         tick_rate,
         rounds: rounds.iter().map(|round| round.summary.clone()).collect(),
     };
-    Ok(ImportedDemo { summary, rounds })
+    let mut demo = ImportedDemo { summary, rounds };
+    refresh_score_rosters(&mut demo);
+    Ok(demo)
+}
+
+// Reconstruct team continuity from stable player IDs, including old cached replays.
+fn refresh_score_rosters(demo: &mut ImportedDemo) {
+    for round in &mut demo.rounds {
+        if let Some(frame) = round.frames.iter().max_by_key(|f| (f.players.len(), std::cmp::Reverse(f.tick))) {
+            round.summary.ct_player_ids = frame.players.iter().filter(|p| p.side == "counter-terrorist" && p.id != "bot:unknown").map(|p| p.id.clone()).collect();
+            round.summary.t_player_ids = frame.players.iter().filter(|p| p.side == "terrorist" && p.id != "bot:unknown").map(|p| p.id.clone()).collect();
+        }
+    }
+    demo.summary.rounds = demo.rounds.iter().map(|r| r.summary.clone()).collect();
 }
 
 #[tauri::command]
@@ -600,6 +631,15 @@ mod tests {
     use super::*;
 
     #[test]
+    fn old_round_summaries_allow_missing_score_rosters() {
+        let old = r#"{"number":1,"startTick":0,"endTick":100,"winnerSide":"terrorist","reason":"bomb","isKnifeRound":false,"kills":2}"#;
+        let summary: RoundSummary = serde_json::from_str(old).unwrap();
+        assert!(summary.ct_player_ids.is_empty());
+        assert!(summary.t_player_ids.is_empty());
+    }
+
+
+    #[test]
     #[ignore]
     fn restores_dead_names_from_real_fixture() {
         let bytes = std::fs::read(std::env::var("CSTRACKER_LIBRARY_TEST_FIXTURE").expect("set fixture path")).unwrap();
@@ -656,6 +696,13 @@ mod tests {
                 .sum::<usize>()
         );
         assert!(!demo.summary.rounds.is_empty());
+        assert!(!demo.summary.player_stats.is_empty());
+        for player in &demo.summary.player_stats {
+            assert!(player["steamid"].is_string(), "Steam IDs must retain full precision");
+            assert!(player["rounds_played"].as_i64().unwrap() > 0);
+            assert!((0.0..=100.0).contains(&player["kast"].as_f64().unwrap()));
+            assert!(player["adr"].as_f64().unwrap() >= 0.0);
+        }
         assert!(demo.rounds.iter().any(|round| !round.frames.is_empty()));
         let maps: serde_json::Value =
             serde_json::from_str(include_str!("../../src/assets/demo-radars/map-data.json"))

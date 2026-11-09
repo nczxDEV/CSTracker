@@ -12,10 +12,10 @@ test('HQ renders an offline profile, filters it, saves objectives, restores them
  els['player-hq']=new E('player-hq');const context={document:{getElementById:id=>els[id]||null,createElement:()=>new E()},PlayerHQModel:M,localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v),removeItem:k=>storage.delete(k)},crypto:{randomUUID:()=>String(Math.random())},AbortSignal,console,fetch:async path=>{calls.push(['fetch',path]);throw Error('offline');},activateTab:id=>calls.push(['navigate',id]),addEventListener:(type,fn)=>events[type]=fn,__TAURI__:{core:{invoke:async(name,args)=>{calls.push([name,args]);if(name==='list_past_demos')return [{id:'demo',fileName:'test.dem',mapName:'de_ancient',rounds:16,importedAt:1}];return null;}}}};context.window=context;vm.createContext(context);vm.runInContext(fs.readFileSync('src/player-hq.js','utf8'),context);els.accountStatus=status=>events['cstracker-account-status']({detail:status});await new Promise(r=>setImmediate(r));return els;}
  let els=await boot();assert(els['hq-matches'].innerHTML.includes('13:9'));assert(els['hq-library'].innerHTML.includes('test.dem'));
  assert(!els['player-hq'].innerHTML.includes('name="hq-workspace"'));assert(!els['hq-account']);
- for(const id of ['hq-detail-panel','hq-library-panel','hq-maps-panel','hq-evidence-panel','hq-journal-panel'])assert.equal(els[id].open,true);
+ for(const id of ['hq-library-panel','hq-maps-panel','hq-evidence-panel','hq-journal-panel'])assert.equal(els[id].open,true);
  assert.equal((els['hq-matches'].innerHTML.match(/data-detail=/g)||[]).length,6);assert.equal(els['hq-more'].hidden,false);
  els['hq-more'].onclick();assert.equal((els['hq-matches'].innerHTML.match(/data-detail=/g)||[]).length,12);assert.equal(els['hq-more'].hidden,true);
- els['hq-map'].value='de_nuke';els['hq-map'].oninput();assert(els['hq-matches'].innerHTML.includes('No records'));els['hq-map'].value='';els['hq-map'].oninput();
+ els['hq-map'].value='de_nuke';els['hq-map'].oninput();assert(els['hq-matches'].innerHTML.includes('No matches'));els['hq-map'].value='';els['hq-map'].oninput();
  assert.equal((els['hq-matches'].innerHTML.match(/data-detail=/g)||[]).length,6);
  await els['player-hq'].handlers.click({target:{closest:()=>({dataset:{link:'faceit:m1'}})}});assert.equal(els['hq-detail-panel'].open,true);
  els['hq-note'].value='Review three opening deaths';els['hq-add-goal'].onclick();assert(els['hq-journal'].innerHTML.includes('Review three opening deaths'));
@@ -23,6 +23,7 @@ test('HQ renders an offline profile, filters it, saves objectives, restores them
  assert.equal(els['hq-detail-panel'].open,true);assert.equal(els['hq-library-panel'].open,true);
  els=await boot();assert(els['hq-journal'].innerHTML.includes('Review three opening deaths'));
  await els['player-hq'].handlers.click({target:{closest:()=>({dataset:{open:'demo'}})}});assert(calls.some(([name,args])=>name==='open_player_hq_demo'&&args.id==='demo'));
+ await els['player-hq'].handlers.click({target:{closest:()=>({dataset:{detail:'faceit:m1'}})}});assert(calls.some(([name,args])=>name==='open_match_summary_window'&&args.matchId==='m1'));
  els['hq-login'].onclick();assert(calls.some(([name,id])=>name==='navigate'&&id==='tab-account'));
  assert(!els['hq-player']);assert(els['hq-connection'].textContent.includes('not verified'));
  els.accountStatus({faceit:{providerUserId:'player',displayName:'My FACEIT name',avatarUrl:'https://example.test/avatar.png'}});

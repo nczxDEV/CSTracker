@@ -29,6 +29,14 @@
   // Updates" and "Download & Install Update" being clicked, so the second
   // step doesn't need to re-check.
   let pendingUpdate = null;
+  let checkingUpdate = false;
+  const banner = document.getElementById('update-banner');
+  document.getElementById('update-banner-dismiss')?.addEventListener('click', () => { banner.hidden = true; });
+  document.getElementById('update-banner-view')?.addEventListener('click', () => {
+    document.querySelector('[data-tab-target="tab-overview"]')?.click();
+    els.installBtn?.scrollIntoView({behavior:'smooth', block:'center'});
+    els.installBtn?.focus();
+  });
   // This frontend uses plain script tags: plugin npm modules are not globals.
   const core = window.__TAURI__?.core;
   const updaterApi = core?.invoke && core?.Channel ? {
@@ -77,6 +85,7 @@
    * clicked "Check for Updates" themselves.
    */
   async function checkForUpdate(silent) {
+    if (checkingUpdate) return;
     const updater = updaterApi;
     if (!updater?.check) {
       if (!silent) {
@@ -88,6 +97,7 @@
       return;
     }
 
+    checkingUpdate = true;
     if (!silent) {
       els.checkBtn.disabled = true;
       setStatus("Checking for updates...", "idle");
@@ -96,6 +106,10 @@
       const update = await updater.check();
       if (update) {
         pendingUpdate = update;
+        if (banner) {
+          document.getElementById('update-banner-label').textContent = `Update available · v${update.version}`;
+          banner.hidden = false;
+        }
         setStatus(`Update available: v${update.version}`, "available");
         els.installBtn.style.display = "inline-block";
         if (update.body) {
@@ -106,6 +120,7 @@
         }
       } else {
         pendingUpdate = null;
+        if (banner) banner.hidden = true;
         els.installBtn.style.display = "none";
         els.notesHint.style.display = "none";
         if (!silent) {
@@ -118,6 +133,7 @@
         setStatus("Couldn't check for updates - see the console for details.", "err");
       }
     } finally {
+      checkingUpdate = false;
       if (!silent) {
         els.checkBtn.disabled = false;
       }

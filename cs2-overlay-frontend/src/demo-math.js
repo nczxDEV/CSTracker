@@ -27,7 +27,41 @@
     const zone=matches[0];
     return zone ? (zone.EnglishName || zone.Name.replace(/([a-z])([A-Z])/g,'$1 $2').replace(/_/g,' ')) : null;
   }
-  const api = { interpolateYaw, radarPointer, pointInPolygon, calloutAt };
+  // Pure lookup: the result depends only on the requested tick, never seek direction.
+  function framePair(frames, tick) {
+    if (!frames?.length) return null;
+    let low = 0, high = frames.length - 1;
+    while (low < high) {
+      const mid = Math.ceil((low + high) / 2);
+      if (frames[mid].tick <= tick) low = mid; else high = mid - 1;
+    }
+    const before = frames[low], after = frames[Math.min(low + 1, frames.length - 1)];
+    const fraction = after.tick > before.tick ? Math.max(0, Math.min(1, (tick - before.tick) / (after.tick - before.tick))) : 0;
+    return { before, after, fraction };
+  }
+  function roundScore(rounds, current, tick) {
+    const ct = new Set(current.ctPlayerIds || []), t = new Set(current.tPlayerIds || []);
+    let ctScore = 0, tScore = 0;
+    const previous = rounds.filter(r => r.number < current.number).sort((a,b)=>a.number-b.number);
+    // A partial recording cannot establish the missing rounds' score.
+    if (previous.length && previous[0].number !== 1 || !previous.length && current.number !== 1) return null;
+    for (let i=1;i<previous.length;i++) if(previous[i].number!==previous[i-1].number+1)return null;
+    if (previous.length && previous.at(-1).number !== current.number-1) return null;
+    for (const r of [...previous, ...(tick >= current.endTick ? [current] : [])]) {
+      if (r.isKnifeRound) continue;
+      const ids = r.winnerSide === 'counter-terrorist' ? r.ctPlayerIds : r.winnerSide === 'terrorist' ? r.tPlayerIds : null;
+      if (!ids?.length) return null;
+      const a=ids.filter(id=>ct.has(id)).length, b=ids.filter(id=>t.has(id)).length;
+      if (a===b || Math.max(a,b)<Math.ceil(ids.length/2)) return null;
+      if(a>b)ctScore++;else tScore++;
+    }
+    return {ct:ctScore,t:tScore};
+  }
+  function timelineEvents(events, start, end) {
+    return events.filter(e=>['kill','grenade','bomb'].includes(e.kind) && Number.isFinite(e.tick) && e.tick>=start && e.tick<=end)
+      .map(e=>({...e,position:100*(e.tick-start)/Math.max(1,end-start)}));
+  }
+  const api = { interpolateYaw, radarPointer, pointInPolygon, calloutAt, framePair, roundScore, timelineEvents };
   if (typeof module !== "undefined" && module.exports) module.exports = api;
   else root.DemoMath = api;
 })(globalThis);

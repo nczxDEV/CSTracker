@@ -23,6 +23,7 @@
   let currentTick = 0;
   let playing = false;
   let previewEnd = null;
+  let loopStart = null, loopEnd = null, loopEnabled = false;
   let previousFrameTime = 0;
   let loadingRound = 0;
   let lastRosterFrame = -1;
@@ -60,6 +61,12 @@
     return round ? (currentTick - round.summary.startTick) / summary.tickRate : 0;
   }
   function updatePlaybackUi() {
+    if (round) {
+      const score = window.DemoMath.roundScore(summary.rounds, round.summary, currentTick);
+      $("demo-score-ct").textContent = score?.ct ?? "—";
+      $("demo-score-t").textContent = score?.t ?? "—";
+      $("demo-match-score").title = score ? "Score reconstructed from recorded rounds, shown for the current CT and T teams." : "Score unavailable: incomplete round history or unresolved team identities.";
+    }
     ui.playButton.textContent = playing ? "Pause" : "Play";
     ui.timeline.value = round ? Math.round(1000 * (currentTick - round.summary.startTick) / Math.max(1, round.summary.endTick - round.summary.startTick)) : 0;
     ui.timeLabel.textContent = `${formatTime(currentSeconds())} / ${formatTime(roundDuration())}`;
@@ -83,20 +90,121 @@
     return Number.isFinite(value) ? value : null;
   }
   function findFramePair(tick) {
-    if (!round?.frames.length) return null;
-    const frames = round.frames;
-    let low = 0;
-    let high = frames.length - 1;
-    while (low < high) {
-      const mid = Math.ceil((low + high) / 2);
-      if (frames[mid].tick <= tick) low = mid;
-      else high = mid - 1;
-    }
-    const before = frames[low];
-    const after = frames[Math.min(low + 1, frames.length - 1)];
-    const fraction = after.tick > before.tick ? Math.min(1, Math.max(0, (tick - before.tick) / (after.tick - before.tick))) : 0;
-    return { before, after, fraction };
+    return window.DemoMath.framePair(round?.frames, tick);
   }
+
+  function seekTo(tick) {
+    if (!round || ui.timeline.disabled || !Number.isFinite(tick)) return;
+    currentTick = Math.max(round.summary.startTick, Math.min(round.summary.endTick, tick));
+    playing = false; previewEnd = null; previousFrameTime = 0;
+    loopEnabled = false; updateLoopUi();
+    lastRosterFrame = -1;
+    updatePlaybackUi(); renderPlayers(); draw();
+  }
+  function updateLoopUi() {
+    const valid = Number.isFinite(loopStart) && Number.isFinite(loopEnd) && loopEnd > loopStart;
+    $("demo-loop-toggle").disabled = !valid;
+    $("demo-loop-toggle").setAttribute("aria-pressed", String(loopEnabled));
+    const time = tick => formatTime((tick-round.summary.startTick)/summary.tickRate);
+    $("demo-loop-range").textContent = loopStart == null ? "Select a start and end" : `A ${time(loopStart)} · B ${loopEnd == null ? "not set" : time(loopEnd)}`;
+  }
+  $("demo-loop-a").addEventListener("click",()=>{
+    if(!round || ui.timeline.disabled)return;
+    loopStart=currentTick;if(loopEnd<=loopStart)loopEnd=null;loopEnabled=false;updateLoopUi();
+  });
+  $("demo-loop-b").addEventListener("click",()=>{
+    if(!round || ui.timeline.disabled)return;
+    if(loopStart==null || currentTick<=loopStart){$("demo-review-status").textContent="Set A first, then choose a later moment for B.";return;}
+    loopEnd=currentTick;loopEnabled=false;$("demo-review-status").textContent="Loop range ready.";updateLoopUi();
+  });
+  $("demo-loop-toggle").addEventListener("click",()=>{
+    if(!round || ui.timeline.disabled || loopEnd<=loopStart)return;
+    loopEnabled=!loopEnabled;previewEnd=null;
+    if(loopEnabled && (currentTick<loopStart || currentTick>=loopEnd))currentTick=loopStart;
+    previousFrameTime=0;updateLoopUi();updatePlaybackUi();renderPlayers();draw();
+  });
+  $("demo-statboard-btn").addEventListener("click",()=>{
+    if(!round || ui.timeline.disabled)return;
+    playing=false;updatePlaybackUi();window.DemoStatboard.render(summary,round.summary);$("demo-statboard").showModal();
+  });
+  const momentKey="cstracker-demo-moments-v1";
+  function readMoments(){
+    const rows=JSON.parse(localStorage.getItem(momentKey)||"[]");
+    if(!Array.isArray(rows))throw Error("Saved moments could not be read. Existing data was preserved.");
+    return rows;
+  }
+  function renderBookmarks(){
+    const list=$("demo-bookmark-list");list.replaceChildren();
+    try{
+      const items=readMoments().filter(m=>m && m.demoId===summary?.libraryId && Number.isFinite(m.tick));
+      for(const m of items){
+        const row=textElement("div","","demo-saved-moment");
+        const open=textElement("button",`Round ${m.round} · ${formatTime(m.seconds)}`);open.type="button";
+        open.onclick=async()=>{open.disabled=true;try{await loadRound(m.round);if(round?.summary.number===m.round)seekTo(m.tick);}finally{open.disabled=false;}};
+        const note=document.createElement("input");note.type="text";note.maxLength=500;note.value=String(m.note||"");note.placeholder="Add a review note";note.setAttribute("aria-label",`Note for round ${m.round}`);
+        const save=textElement("button","Save note"),remove=textElement("button","Remove");save.type=remove.type="button";
+        save.onclick=()=>{try{const rows=readMoments(),item=rows.find(r=>r.id===m.id);if(item)item.note=note.value.slice(0,500);localStorage.setItem(momentKey,JSON.stringify(rows));$("demo-review-status").textContent="Note saved locally.";}catch(e){$("demo-review-status").textContent=e.message;}};
+        remove.onclick=()=>{try{localStorage.setItem(momentKey,JSON.stringify(readMoments().filter(r=>r.id!==m.id)));renderBookmarks();}catch(e){$("demo-review-status").textContent=e.message;}};
+        row.append(open,note,save,remove);list.append(row);
+      }
+      if(!items.length)list.append(textElement("p","No saved moments for this demo.","detail-note"));
+    }catch(e){$("demo-review-status").textContent=e.message;}
+  }
+  $("demo-bookmark").addEventListener("click",()=>{
+    if(!round || ui.timeline.disabled)return;
+    try{
+      if(!summary.libraryId)throw Error("Save this demo in Past demos before bookmarking.");
+      const rows=readMoments();if(rows.length>=500)throw Error("Remove an old saved moment before adding more (500 limit).");
+      if(rows.some(m=>m.demoId===summary.libraryId && m.round===round.summary.number && Math.abs(m.tick-currentTick)<summary.tickRate)){ $("demo-review-status").textContent="This moment is already bookmarked.";return;}
+      rows.push({id:crypto.randomUUID(),demoId:summary.libraryId,round:round.summary.number,tick:currentTick,seconds:currentSeconds(),note:"",createdAt:new Date().toISOString()});
+      localStorage.setItem(momentKey,JSON.stringify(rows));renderBookmarks();$("demo-review-status").textContent="Moment saved locally. Add a note under Saved moments.";
+    }catch(e){$("demo-review-status").textContent=e.message;}
+  });
+  function renderTimelineEvents() {
+    const lanes = {kill:$("timeline-kills"),grenade:$("timeline-utility"),bomb:$("timeline-bomb")};
+    Object.values(lanes).forEach(lane=>lane.replaceChildren());
+    const tip = $("demo-event-tooltip"); tip.hidden = true;
+    for (const event of window.DemoMath.timelineEvents(round.events,round.summary.startTick,round.summary.endTick)) {
+      const button = textElement("button", "", "timeline-event-marker " + event.kind);
+      button.type = "button";
+      button.style.left = event.position + "%";
+      const label = `${formatTime((event.tick-round.summary.startTick)/summary.tickRate)} · ${event.label}`;
+      button.setAttribute("aria-label", label);
+      const show = () => {tip.textContent=label;tip.hidden=false;};
+      button.addEventListener("pointerenter",show);button.addEventListener("focus",show);
+      button.addEventListener("pointerleave",()=>{tip.hidden=true;});button.addEventListener("blur",()=>{tip.hidden=true;});
+      button.addEventListener("click",()=>{seekTo(event.tick);show();});
+      lanes[event.kind].append(button);
+    }
+  }
+  function renderInspectorEvents() {
+    const list = $("demo-all-events"); list.replaceChildren();
+    for (const event of round.events) {
+      const button = textElement("button", `${formatTime((event.tick-round.summary.startTick)/summary.tickRate)} · ${event.label}`, "inspector-event");
+      button.type = "button";
+      button.addEventListener("click", () => seekTo(event.tick));
+      list.append(button);
+    }
+    if (!round.events.length) list.append(textElement("p", "No recorded events in this round.", "detail-note"));
+  }
+  $("demo-inspector-toggle").addEventListener("click", () => {
+    const panel = $("demo-inspector"); panel.hidden = !panel.hidden;
+    $("demo-inspector-toggle").setAttribute("aria-expanded", String(!panel.hidden));
+    if (!panel.hidden) panel.scrollIntoView({behavior:"smooth", block:"nearest"});
+  });
+  for (const button of document.querySelectorAll("[data-inspect]")) button.addEventListener("click", () => {
+    for (const tab of document.querySelectorAll("[data-inspect]")) {
+      const active = tab === button;
+      tab.setAttribute("aria-pressed", String(active));
+      $("inspector-" + tab.dataset.inspect).hidden = !active;
+    }
+  });
+  $("demo-back").addEventListener("click", () => seekTo(currentTick - summary?.tickRate * 5));
+  $("demo-forward").addEventListener("click", () => seekTo(currentTick + summary?.tickRate * 5));
+  document.addEventListener("visibilitychange", () => {
+    // Do not jump through unseen action after minimizing the window.
+    if (document.hidden) { playing = false; previewEnd = null; previousFrameTime = 0; updatePlaybackUi(); }
+  });
   function visiblePlayers() {
     const pair = findFramePair(currentTick);
     if (!pair) return [];
@@ -294,7 +402,7 @@
         const verb = {flashbang:"flashed",smokegrenade:"threw smoke",hegrenade:"threw HE",molotov:"threw molotov",incgrenade:"threw incendiary",incendiary:"threw incendiary",decoy:"threw decoy"}[action] || `threw ${action}`;
         button.append(textElement("span", `${name(event.actorId, event.label.split(" · ")[0])} ${verb}`, "feed-utility-text"));
       } else button.append(textElement("span", event.label, "feed-objective"));
-      button.addEventListener("click", () => { currentTick = event.tick; playing = false; updatePlaybackUi(); renderPlayers(); draw(); });
+      button.addEventListener("click", () => { seekTo(event.tick); });
       ui.events.append(button);
     }
     if (!recent.length) ui.events.append(textElement("small", "No recent events", "feed-empty"));
@@ -319,7 +427,9 @@
     const invoke = window.__TAURI__?.core?.invoke;
     if (!invoke) return;
     const request = ++loadingRound;
-    playing = false; previewEnd=null;
+    playing = false; previewEnd=null;loopStart=loopEnd=null;loopEnabled=false;updateLoopUi();
+    updatePlaybackUi();
+    ui.playButton.disabled = ui.timeline.disabled = true;
     setStatus("Loading round...");
     try {
       const result = await invoke("get_cs2_demo_round", { number });
@@ -330,15 +440,15 @@
       lastRosterFrame = -1;
       currentTick = result.summary.startTick;
       selectedPlayer = null;
-      ui.roundTitle.textContent = `Round ${number} · ${result.summary.winnerSide === "counter-terrorist" ? "CT" : "T"} win · ${result.summary.kills} kills`;
-      renderRounds(); renderEvents(); renderEconomy(); renderPlayers(); updatePlaybackUi(); draw();
+      ui.roundTitle.textContent = result.summary.isKnifeRound ? `Knife round · ${number}` : `Round ${number}`;
+      renderRounds(); renderTimelineEvents(); renderEvents(); renderInspectorEvents(); renderEconomy(); renderPlayers(); updatePlaybackUi(); draw();
       window.RoundCoach.setRound(summary, round, tick => {
-        currentTick = Math.max(round.summary.startTick, Math.min(round.summary.endTick, tick));
-        playing = false; updatePlaybackUi(); renderPlayers(); draw();
+        seekTo(tick);
         ui.canvas.scrollIntoView({behavior: "smooth", block: "center"});
       }, () => currentSeconds());
       setStatus(result.frames.length ? "" : "This round has no player position samples.");
-    } catch (error) { setStatus(String(error), true); }
+    } catch (error) { if (request === loadingRound) setStatus(String(error), true); }
+    finally { if (request === loadingRound) ui.playButton.disabled = ui.timeline.disabled = false; }
   }
   async function importDemo() {
     const invoke = window.__TAURI__?.core?.invoke;
@@ -355,7 +465,9 @@
     finally { window.DemoHome.setLoading(false); window.DemoHome.refresh(); }
   }
   async function showDemo(result) {
+      ++loadingRound; playing = false; previousFrameTime = 0;
       summary = result;
+      renderBookmarks();
       loadCallouts(summary.mapName);
       zoom = 1; panX = 0; panY = 0;
       round = null;
@@ -370,7 +482,8 @@
       ui.canvas.width = radar?.naturalWidth || 1024;
       ui.canvas.height = radar?.naturalHeight || 1024;
       ui.fileName.textContent = summary.fileName;
-      ui.meta.textContent = `${summary.mapName.replace(/^de_/, "").replaceAll("_", " ")} · ${summary.rounds.length} rounds · ${Math.round(summary.tickRate)} ticks/s`;
+      $("demo-map-name").textContent = summary.mapName.replace(/^de_/, "").replaceAll("_", " ");
+      ui.meta.textContent = `${summary.rounds.length} rounds · ${Math.round(summary.tickRate)} ticks/s`;
       window.DemoHome.opened();
       ui.workspace.hidden = false;
       await loadRound(summary.rounds[0].number);
@@ -378,6 +491,7 @@
   function animate(time) {
     if (playing && round) {
       if (previousFrameTime) currentTick += (time - previousFrameTime) / 1000 * summary.tickRate * Number(ui.speed.value);
+      if(loopEnabled)currentTick=window.DemoReview.loopTick(currentTick,loopStart,loopEnd);
       if (previewEnd != null && currentTick >= previewEnd) {currentTick=previewEnd;playing=false;previewEnd=null;}
       if (currentTick >= round.summary.endTick) { currentTick = round.summary.endTick; playing = false; }
       updatePlaybackUi();
@@ -423,6 +537,7 @@
   ui.importButton.addEventListener("click", importDemo);
   ui.playButton.addEventListener("click", () => {
     if (!round) return;
+    if (!playing && loopEnabled && (currentTick<loopStart || currentTick>=loopEnd)) currentTick=loopStart;
     if (!playing && currentTick >= round.summary.endTick) currentTick = round.summary.startTick;
     previewEnd = null;
     playing = !playing;
@@ -431,9 +546,7 @@
   });
   ui.timeline.addEventListener("input", () => {
     if (!round) return;
-    currentTick = round.summary.startTick + Number(ui.timeline.value) / 1000 * (round.summary.endTick - round.summary.startTick);
-    playing = false;
-    updatePlaybackUi(); renderPlayers(); draw();
+    seekTo(round.summary.startTick + Number(ui.timeline.value) / 1000 * (round.summary.endTick - round.summary.startTick));
   });
   ui.layerButton.addEventListener("click", () => {
     lowerLevel = !lowerLevel;
@@ -463,9 +576,9 @@
   $("demo-zoom-reset").addEventListener("click",()=>{zoom=1;panX=panY=0;draw();});
   for (const id of ["demo-utility-toggle","demo-names-toggle"]) $(id).addEventListener("change",draw);
   document.addEventListener("keydown", event => {
-    if (!round || /INPUT|SELECT|BUTTON|TEXTAREA/.test(event.target.tagName)) return;
+    if (!round || ui.workspace.hidden || $("demo-statboard").open || ui.timeline.disabled || event.target.isContentEditable || /INPUT|SELECT|BUTTON|TEXTAREA/.test(event.target.tagName)) return;
     if (event.code === "Space") {event.preventDefault();ui.playButton.click();}
-    if (["ArrowLeft","ArrowRight"].includes(event.code)) {event.preventDefault();currentTick=Math.max(round.summary.startTick,Math.min(round.summary.endTick,currentTick+(event.code==="ArrowLeft"?-5:5)*summary.tickRate));updatePlaybackUi();renderPlayers();draw();}
+    if (["ArrowLeft","ArrowRight"].includes(event.code)) {event.preventDefault();seekTo(currentTick+(event.code==="ArrowLeft"?-5:5)*summary.tickRate);}
   });
   async function initialize() {
     if (!window.__TAURI__?.core?.invoke) return;
@@ -491,6 +604,7 @@
   }
   window.DemoReplay = {show:showDemo, preview(start,end){
     if(!round || !Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>roundDuration()+.05)return false;
+    loopEnabled=false;updateLoopUi();
     currentTick=round.summary.startTick+start*summary.tickRate;previewEnd=Math.min(round.summary.endTick,round.summary.startTick+end*summary.tickRate);playing=true;previousFrameTime=0;updatePlaybackUi();return true;
   }, pause(){playing=false;updatePlaybackUi();}};
   initialize();

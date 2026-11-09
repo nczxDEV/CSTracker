@@ -26,6 +26,7 @@
 #![cfg_attr(any(not(debug_assertions), feature = "bundled-backend"), windows_subsystem = "windows")]
 
 mod demo_analyzer;
+mod deathmatch;
 
 use std::io::Write;
 use std::sync::atomic::AtomicBool;
@@ -92,34 +93,38 @@ struct QuitOnCloseState(AtomicBool);
 /// enabled), the tray icon's "Quit CS Tracker Completely" menu item, and
 /// the Control Panel's own "Quit Completely" button
 /// (`quit_completely` Tauri command).
-fn quit_completely_impl(app: &AppHandle) {
-    log_to_file("Quitting completely (all processes) - sidecar will be terminated.");
+/// Stop only the backend owned by this app, and wait for its termination event.
+fn stop_backend(app: &AppHandle) -> Result<(), String> {
     #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
-    {
-        if let Some(state) = app.try_state::<SidecarHandle>() {
-            if let Some(child) = state.0.lock().unwrap().take() {
-                let _ = child.kill();
+    if let Some(state) = app.try_state::<SidecarHandle>() {
+        let child = state.child.lock().map_err(|_| "Backend lock unavailable")?.take();
+        if let Some(child) = child {
+            if let Err(error) = child.kill() {
+                log_to_file(&format!("Backend stop request: {error}"));
             }
         }
+        let (lock, signal) = &*state.stopped;
+        let stopped = lock.lock().map_err(|_| "Backend exit lock unavailable")?;
+        let (stopped, _) = signal.wait_timeout_while(stopped, std::time::Duration::from_secs(5), |done| !*done)
+            .map_err(|_| "Backend exit wait failed")?;
+        if !*stopped { return Err("Backend did not stop within 5 seconds. Close CS Tracker completely and retry.".into()); }
     }
+    Ok(())
+}
+
+fn quit_completely_impl(app: &AppHandle) {
+    log_to_file("Quitting completely; waiting for the owned backend to stop.");
+    if let Err(error) = stop_backend(app) { log_to_file(&error); }
     app.exit(0);
 }
 
-/// Tauri command backing the Control Panel's "Quit Completely" button
-/// (see launcher.js) - lets the user fully exit the app from the UI
-/// itself, without needing to find the tray icon.
 #[tauri::command]
-fn quit_completely(app: AppHandle) {
-    quit_completely_impl(&app);
-}
+fn quit_completely(app: AppHandle) { quit_completely_impl(&app); }
 
 #[tauri::command]
-async fn prepare_for_update(app: AppHandle) {
-    #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
-    if let Some(state) = app.try_state::<SidecarHandle>() {
-        if let Some(child) = state.0.lock().unwrap().take() { let _ = child.kill(); }
-    }
-    std::thread::sleep(std::time::Duration::from_millis(500));
+async fn prepare_for_update(app: AppHandle) -> Result<(), String> {
+    tauri::async_runtime::spawn_blocking(move || stop_backend(&app)).await
+        .map_err(|error| error.to_string())?
 }
 
 /// Tauri command backing the Control Panel's "Download GSI Config File"
@@ -248,7 +253,10 @@ async fn open_match_summary_window(app: AppHandle, match_id: String, identifier:
 /// cleanly when the app closes (and avoid leaving an orphaned background
 /// process running).
 #[cfg(any(not(debug_assertions), feature = "bundled-backend"))]
-struct SidecarHandle(Mutex<Option<CommandChild>>);
+struct SidecarHandle {
+    child: Mutex<Option<CommandChild>>,
+    stopped: std::sync::Arc<(Mutex<bool>, std::sync::Condvar)>,
+}
 
 /// Starts the bundled backend binary as a background process.
 ///
@@ -290,7 +298,7 @@ fn spawn_backend_sidecar(app: &tauri::App) {
     let app_db_path = app_data_dir.join("app.db").to_string_lossy().to_string();
     log_to_file(&format!("Backend SQLite database path: {app_db_path}"));
 
-    let mut sidecar_command = match app.shell().sidecar("cs2-overlay-backend") {
+    let sidecar_command = match app.shell().sidecar("cs2-overlay-backend") {
         Ok(cmd) => cmd,
         Err(err) => {
             log_to_file(&format!(
@@ -349,28 +357,7 @@ fn spawn_backend_sidecar(app: &tauri::App) {
     // app was started.
     .env("DATABASE_PATH", app_db_path);
 
-    // "Bejelentkezés FACEIT-tel" (AuthModule) - the OAuth2 CLIENT
-    // credentials baked into THIS compiled binary at build time (see
-    // build.rs `bake_faceit_oauth_env_from_backend_dotenv()`, which reads
-    // them from `cs2-overlay-backend/.env` when `cargo build`/`tauri
-    // build` runs) are explicitly forwarded here as real environment
-    // variables for the sidecar CHILD PROCESS to read. This is
-    // necessary because the packaged sidecar binary has no `.env` file
-    // shipped alongside it (only the compiled executable itself is
-    // bundled - see tauri.conf.json `bundle.externalBin`), so without
-    // this step a packaged release build would always show "FACEIT
-    // login is not configured on this build", even if the `.env` used
-    // during the backend's own `npm run build:sidecar` step had real
-    // values in it.
-    if let Some(client_id) = option_env!("FACEIT_OAUTH_CLIENT_ID") {
-        sidecar_command = sidecar_command.env("FACEIT_OAUTH_CLIENT_ID", client_id);
-    }
-    if let Some(client_secret) = option_env!("FACEIT_OAUTH_CLIENT_SECRET") {
-        sidecar_command = sidecar_command.env("FACEIT_OAUTH_CLIENT_SECRET", client_secret);
-    }
-    if let Some(redirect_uri) = option_env!("FACEIT_OAUTH_REDIRECT_URI") {
-        sidecar_command = sidecar_command.env("FACEIT_OAUTH_REDIRECT_URI", redirect_uri);
-    }
+    // Optional OAuth configuration is inherited from runtime environment only.
 
     let (mut receiver, child) = match sidecar_command.spawn() {
         Ok(pair) => pair,
@@ -383,7 +370,8 @@ fn spawn_backend_sidecar(app: &tauri::App) {
         }
     };
 
-    app.manage(SidecarHandle(Mutex::new(Some(child))));
+    let stopped = std::sync::Arc::new((Mutex::new(false), std::sync::Condvar::new()));
+    app.manage(SidecarHandle { child: Mutex::new(Some(child)), stopped: stopped.clone() });
     log_to_file("Backend sidecar process started successfully.");
 
     // Log the sidecar's stdout/stderr lines to the log file - helps with
@@ -399,6 +387,8 @@ fn spawn_backend_sidecar(app: &tauri::App) {
                     log_to_file(&format!("[backend stderr] {}", String::from_utf8_lossy(&line)));
                 }
                 CommandEvent::Terminated(payload) => {
+                    let (lock, signal) = &*stopped;
+                    if let Ok(mut done) = lock.lock() { *done = true; signal.notify_all(); }
                     log_to_file(&format!("[backend] stopped, exit code: {:?}", payload.code));
                 }
                 _ => {}
@@ -558,6 +548,7 @@ fn main() {
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
+            deathmatch::open_deathmatch, deathmatch::dm_catalog, deathmatch::dm_probe, deathmatch::dm_players, deathmatch::dm_join,
             claim_startup_welcome,
             quit_completely,
             save_gsi_config_file,
@@ -605,6 +596,11 @@ fn main() {
                 }
             }
         })
-        .run(tauri::generate_context!())
-        .expect("error while running the Tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building the Tauri application")
+        .run(|app, event| {
+            if matches!(event, tauri::RunEvent::Exit) {
+                if let Err(error) = stop_backend(app) { log_to_file(&error); }
+            }
+        });
 }

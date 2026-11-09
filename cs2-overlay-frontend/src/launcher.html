@@ -204,6 +204,7 @@
       <button class="nav-tab" data-tab-target="tab-demo-analyzer">
         <span class="nav-icon">&#9654;</span><span class="nav-label">Demo Analyzer</span>
       </button>
+      <button id="open-deathmatch" class="dm-nav-button" type="button"><span class="nav-icon">▷</span><span class="nav-label">Deathmatch Finder</span></button>
       <button class="nav-tab" data-tab-target="tab-time-performance">
         <span class="nav-icon">&#9202;</span><span class="nav-label">Time Performance</span>
       </button>
@@ -217,6 +218,11 @@
       <span id="launcher-current-page" class="command-page-announcement" aria-live="polite">Overview</span>
     </nav>
 
+    <aside id="update-banner" class="update-banner" role="status" hidden>
+      <strong id="update-banner-label">Update available</strong>
+      <button id="update-banner-view" type="button">View update</button>
+      <button id="update-banner-dismiss" type="button" aria-label="Dismiss update notification">Later</button>
+    </aside>
     <div class="launcher-content">
     <div class="launcher-tab-panel" id="tab-player-hq" data-tab="tab-player-hq">
       <section id="player-hq"></section>
@@ -923,7 +929,9 @@
   <script src="demo-launcher.js"></script>
   <script src="launcher-navigation.js"></script>
   <script src="launcher.js"></script>
+  <script src="demo-review.js"></script>
+  <script src="match-ratings.js"></script>
   <script src="player-hq-model.js"></script>
   <script src="player-hq.js"></script>
-</body>
+<script src="deathmatch-launcher.js"></script></body>
 </html>

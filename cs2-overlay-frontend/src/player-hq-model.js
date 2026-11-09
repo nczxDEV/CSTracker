@@ -8,7 +8,8 @@
   }
   const finite=v=>typeof v==='number'&&Number.isFinite(v);
   function merge(existing,incoming){return [...new Map([...existing,...incoming].map(r=>[r.id,r])).values()].sort((a,b)=>(Date.parse(b.playedAt)||0)-(Date.parse(a.playedAt)||0)).slice(0,1000);}
-  function online(item,identifier,fetchedAt){return {
+  function online(item,identifier,fetchedAt){const ratings=typeof module==='object'?require('./match-ratings.js'):globalThis.MatchRatings;return {
+    trackerRating:ratings.trackerRating(item,{teamA:{score:item.teamScore},teamB:{score:item.opponentScore}}),
     id:`faceit:${item.matchId}`,externalId:item.matchId,identifier,source:'faceit-api',
     playedAt:item.finishedAt||item.startedAt||null,fetchedAt,
     map:item.map||null,result:['W','L'].includes(item.result)?item.result:null,

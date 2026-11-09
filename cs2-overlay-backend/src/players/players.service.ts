@@ -432,7 +432,7 @@ export class PlayersService {
       const stat = (key: string) => values?.[key] == null || values[key] === '' || !Number.isFinite(Number(values[key])) ? null : Number(values[key]);
       return { ...item, faceitRating: rating !== null && Number.isFinite(rating) ? rating : null,
         map: typeof values?.['Map'] === 'string' ? values['Map'] : null,
-        kills: stat('Kills'), deaths: stat('Deaths'), source: 'faceit-api' as const, fetchedAt: new Date().toISOString() };
+        kills: stat('Kills'), deaths: stat('Deaths'), assists: stat('Assists'), adr: stat('ADR'), roundsPlayed: stat('Rounds'), source: 'faceit-api' as const, fetchedAt: new Date().toISOString() };
     });
   }
 

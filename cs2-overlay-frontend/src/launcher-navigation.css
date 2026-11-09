@@ -16,3 +16,7 @@
 #launcher-nav .command-menu-pages .nav-tab::after{display:none}
 #launcher-nav .command-page-announcement{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 #launcher-nav :is(button,summary):focus-visible{outline:2px solid var(--accent-blue);outline-offset:2px}
+
+.dm-nav-button{display:flex;align-items:center;gap:12px;width:100%;padding:12px 16px;border:0;border-radius:8px;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer}.dm-nav-button:hover{background:#26324a}
+
+.update-banner{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;padding:12px 18px;border:1px solid #4e80ca;border-radius:12px;background:#14253b;color:#eaf2ff}.update-banner[hidden]{display:none}.update-banner strong{flex:1}.update-banner button{padding:7px 12px;border:1px solid #59769d;border-radius:7px;background:#203958;color:inherit;cursor:pointer}
